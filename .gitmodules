@@ -1,0 +1,8 @@
+[submodule "ext/w3f"]
+	path = ext/w3f
+	url = https://github.com/w3f/jamtestvectors
+	branch = master
+[submodule "ext/jamduna"]
+	path = ext/jamduna
+	url = https://github.com/jam-duna/jamtestnet
+	branch = main
