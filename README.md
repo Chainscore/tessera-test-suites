@@ -34,7 +34,27 @@ tessera-test-suites/
 └── poetry.lock
 ```
 
+## 🧑‍💻 Setup
 
+Package up Tessera and install it
+
+```commandline
+git clone https://github.com/Chainscore/tessera.git
+cd tessera
+pip install -e .
+```
+
+YOu should see something like this:
+```commandline
+Installing collected packages: tessera
+  Attempting uninstall: tessera
+    Found existing installation: tessera 0.1.0
+    Uninstalling tessera-0.1.0:
+      Successfully uninstalled tessera-0.1.0
+Successfully installed tessera-0.1.0
+```
+
+----
 # 🧪 How to Test? 
 
 ## W3F STF Modules
