@@ -119,16 +119,17 @@ File pattern to match test vectors.
 
 Run all tests across all modules:
 
+```
 pytest -s -vv -q harness/w3f/stf
-
+```
 Run tests only for accumulate with full vectors:
-
+```
 pytest -s -vv -q harness/w3f/stf --module accumulate --spec full
-
+```
 Run just one test vector file in safrole:
-
+```
 pytest -s -vv -q harness/w3f/stf --module safrole --pattern publish-tickets*.json
-
+```
 ----
 
 ## PyTest Param
