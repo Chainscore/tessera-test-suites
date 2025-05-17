@@ -6,15 +6,26 @@ This repository contains heavy test harnesses, performance benchmarks, and exter
 
 ---
 
-## 🗂️ Structure
+## 🗂️  Directory Structure
 
-```bash
+```
 tessera-test-suites/
-├── ext/               # External test vectors
-│   └── w3f/           # W3F Test Vectors
-│   └── jamduna/       # Jam Duna Testnet data
-├── harness/           # Test drivers consuming external vector files
-│   └── w3f/           # Example test using Web3 Foundation vectors
+├── ext/
+│   └── w3f/
+│       └── safrole/
+│           ├── tiny/
+│           │   └── test-case-1.json
+│       ├── trie/
+│       └── shuffle/
+│   └── jamduna/
+├── harness/
+│   └── w3f/
+│       └── stf/
+│           ├── transform/
+│           │   ├── safrole.py   # Defines transform_block, transform_state, transition
+│           └── test_w3f_vectors.py
+│       ├── trie/
+│       └── shuffle/
 ├── perf/              # Micro-benchmarks and perf tests
 ├── scripts/           # Helper scripts (e.g., vector updater)
 ├── vendor/            # External vector sets (added via git submodules)
@@ -23,7 +34,10 @@ tessera-test-suites/
 └── poetry.lock
 ```
 
-## 🧪 How to Test STF Modules
+
+# 🧪 How to Test? 
+
+## W3F STF Modules
 
 To run tests for a specific STF module, such as safrole, use:
 
@@ -44,11 +58,11 @@ We do:
 
 
 
-## 🔧 Command-Line Parameters
+### 🔧 Command-Line Parameters
 
 You can customize your test runs using the following CLI options (defined in conftest.py):
 
-### --module
+#### --module
 
 Specifies which STF module to test.
 	•	Must match the folder name in harness/w3f/stf/transform/
@@ -59,7 +73,7 @@ Specifies which STF module to test.
 --module accumulate
 ```
 
-### --spec
+#### --spec
 
 Specifies the test vector spec directory to use (tiny, full, etc).
 - Path: ext/w3f/{module}/{spec}/
@@ -69,7 +83,7 @@ Specifies the test vector spec directory to use (tiny, full, etc).
 --spec full
 ```
 
-### --pattern
+#### --pattern
 
 File pattern to match test vectors.
 	•	Default: "*.json"
@@ -78,6 +92,22 @@ File pattern to match test vectors.
 --pattern skip-*.json
 --pattern test-42.json
 ```
+
+----
+
+### 🧭 Examples
+
+Run all tests across all modules:
+
+pytest -s -vv -q harness/w3f/stf
+
+Run tests only for accumulate with full vectors:
+
+pytest -s -vv -q harness/w3f/stf --module accumulate --spec full
+
+Run just one test vector file in safrole:
+
+pytest -s -vv -q harness/w3f/stf --module safrole --pattern publish-tickets*.json
 
 ----
 
@@ -96,37 +126,4 @@ Increase verbosity to show:
 
 Quiet mode—removes test collection summary and extra logging.
 
-----
 
-## 🧭 Examples
-
-Run all tests across all modules:
-
-pytest -s -vv -q harness/w3f/stf
-
-Run tests only for accumulate with full vectors:
-
-pytest -s -vv -q harness/w3f/stf --module accumulate --spec full
-
-Run just one test vector file in safrole:
-
-pytest -s -vv -q harness/w3f/stf --module safrole --pattern publish-tickets*.json
-
----
-## 🗂️ Directory Structure
-
-Each STF module test setup follows this pattern:
-```
-tessera-test-suites/
-├── ext/
-│   └── w3f/
-│       └── safrole/
-│           ├── tiny/
-│           │   └── test-case-1.json
-├── harness/
-│   └── w3f/
-│       └── stf/
-│           ├── transform/
-│           │   ├── safrole.py   # Defines transform_block, transform_state, transition
-│           └── test_w3f_vectors.py
-```
