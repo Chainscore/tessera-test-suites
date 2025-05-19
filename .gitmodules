@@ -10,3 +10,7 @@
 	path = ext/pvm-koute
 	url = https://github.com/koute/jamtestvectors.git
 	branch = master_pvm_initial
+[submodule "ext/w3f-w-traces"]
+	path = ext/w3f-w-traces
+	url = https://github.com/davxy/jam-test-vectors.git
+	branch = traces
