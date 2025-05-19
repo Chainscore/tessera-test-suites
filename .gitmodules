@@ -6,3 +6,7 @@
 	path = ext/jamduna
 	url = https://github.com/jam-duna/jamtestnet
 	branch = main
+[submodule "ext/pvm-koute"]
+	path = ext/pvm-koute
+	url = https://github.com/koute/jamtestvectors.git
+	branch = master_pvm_initial
