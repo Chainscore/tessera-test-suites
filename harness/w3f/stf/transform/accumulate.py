@@ -24,7 +24,7 @@ def transform_block(vector_input: dict) -> (Block, Dict):
     block.header.slot = Tau(vector_input["slot"])
     block.extrinsic.guarantees = GuaranteesExtrinsic([ReportGuarantee(report=WorkReport.from_json(report), slot=block.header.slot, signatures=ValidatorSignatures([])) for report in vector_input["reports"]])
     return block, {}
-`
+
 def transform_state(vector_state: dict) -> Sigma:
     state = GhostState.genesis()
     state.tau = Tau.from_json(vector_state["slot"])

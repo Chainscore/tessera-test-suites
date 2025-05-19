@@ -1,42 +1,30 @@
-import json, importlib
-from copy import deepcopy
+import json
 from pathlib import Path
+from harness.w3f.pvm.types import PvmTestcase
+from jam.execution.pvm.pvm import PVM
 
-from jam.consensus.safrole.errors import SafroleError
+PVM_ROOT = Path(__file__).parents[3] / "ext" / "pvm-koute" / "pvm" / "programs"
 
-STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
-
-def fetch_vectors(module: str, spec: str, pattern: str):
-    vector_dir = STF_ROOT / module / spec
+def fetch_vectors(pattern: str):
     return [
         (f.name, json.load(open(f)))
-        for f in vector_dir.glob(pattern)
+        for f in PVM_ROOT.glob(pattern)
     ]
 
-def load_stf_module(module: str):
-    mod = importlib.import_module(f"harness.w3f.stf.transform.{module}")
-    return mod.transform_block, mod.transform_state, mod.transition
-
-def run_case(name: str, vector: dict, tblock, tstate, transition):
-    input_block, args = tblock(vector["input"])
-    pre_state   = tstate(vector["pre_state"])
-    try:
-        post_expect = tstate(vector["post_state"])
-        post_actual = transition(deepcopy(pre_state), input_block, **args)
-        from deepdiff import DeepDiff
-        value_diff = DeepDiff(post_actual.to_json(), post_expect.to_json(), significant_digits=0, verbose_level=2)
-        assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
-        types_diff = DeepDiff(post_actual, post_expect, significant_digits=0, verbose_level=2)
-        assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"
-    except SafroleError as e:
-        if "err" in vector["output"]:
-            assert vector["output"].get("err") == e.code._value_
-        else:
-            raise e
-
-def test_stf_vectors(module, spec, pattern):
-    tblock, tstate, transition = load_stf_module(module)
-    for name, vector in fetch_vectors(module, spec, pattern):
+def test_pvm_vectors(pattern):
+    for name, vector in fetch_vectors(pattern):
         print(f"\n ⏭️Running test case {name} ...")
-        run_case(name, vector, tblock, tstate, transition)
+        tc = PvmTestcase.from_json(vector)
+        print("\nProcessing test case: ", tc.name)
+        status, pc, gas, registers, memory = PVM.execute(
+            bytes(tc.program),
+            tc.initial_pc,
+            tc.initial_gas,
+            tc.initial_regs,
+            tc.initial_memory.to_memory(tc.initial_page_map),
+        )
+        assert pc == tc.expected_pc
+        assert status.value.name == tc.expected_status
+        assert registers == tc.expected_regs
+        assert memory == tc.expected_memory.to_memory(tc.initial_page_map)
         print("✅Passed")
