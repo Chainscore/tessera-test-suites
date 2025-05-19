@@ -24,9 +24,9 @@ def run_case(name: str, vector: dict, tblock, tstate, transition):
         post_expect = tstate(vector["post_state"])
         post_actual = transition(deepcopy(pre_state), input_block, **args)
         from deepdiff import DeepDiff
-        value_diff = DeepDiff(post_expect.to_json(), post_actual.to_json(), significant_digits=0, verbose_level=2)
+        value_diff = DeepDiff(post_actual.to_json(), post_expect.to_json(), significant_digits=0, verbose_level=2)
         assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
-        types_diff = DeepDiff(post_expect, post_actual, significant_digits=0, verbose_level=2)
+        types_diff = DeepDiff(post_actual, post_expect, significant_digits=0, verbose_level=2)
         assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"
     except SafroleError as e:
         if "err" in vector["output"]:
