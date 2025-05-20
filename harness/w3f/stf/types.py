@@ -46,3 +46,8 @@ class InputAccounts(Dictionary):
 								timestamps=LookupTimestamps({})
 						)
 				return delta
+
+
+@decodable_dictionary(ServiceId,tuple[Gas,U32])
+class Stats(Dictionary[ServiceId,tuple[Gas,U32]]):
+    ...
