@@ -1,4 +1,4 @@
-from typing import Tuple, Dict
+from typing import Dict
 
 from jam.consensus.safrole.safrole import Safrole
 from jam.state.ghost import GhostState
@@ -20,6 +20,7 @@ def transform_block(vector_input: dict) -> (Block, Dict):
     block.extrinsic.tickets = TicketsExtrinsic.from_json(vector_input["extrinsic"])
     block.header.slot = Tau(vector_input["slot"])
     return block, {"entropy": OpaqueHash(vector_input["entropy"])}
+
 
 def transform_state(vector_state: dict) -> Sigma:
     state = GhostState.genesis()

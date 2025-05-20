@@ -7,8 +7,11 @@ from jam.consensus.safrole.safrole import Safrole
 from jam.state.ghost import GhostState
 from jam.state.state import setup_state
 from jam.types.block import Block
-from jam.types.extrinsics import GuaranteesExtrinsic, ReportGuarantee
-from jam.types.extrinsics.guarantees import ValidatorSignatures
+from jam.types.extrinsics.guarantees import (
+    ValidatorSignatures,
+    GuaranteesExtrinsic,
+    ReportGuarantee,
+)
 from jam.types.state.chi import Chi
 from jam.types.state.eta import Eta
 from jam.types.state.nu import Nu
@@ -33,6 +36,7 @@ def transform_block(vector_input: dict) -> (Block, Dict):
         ]
     )
     return block, {}
+
 
 def transform_state(vector_state: dict) -> Sigma:
     state = GhostState.genesis()

@@ -3,11 +3,13 @@ import importlib
 from copy import deepcopy
 from pathlib import Path
 
+from jam.assurances.assurances import AssurancesError
 from jam.consensus.safrole.errors import SafroleError
 from jam.disputes.error import DisputesError, DisputesErrorCode
 
 
 from deepdiff import DeepDiff
+from jam.report.state import ReportingError
 
 STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
 
@@ -50,10 +52,8 @@ def run_case(name: str, vector: dict,
 
     except Exception as e:
         # only handle SafroleError or DisputesError here:
-        if isinstance(e, (SafroleError, DisputesError)):
+        if isinstance(e, (SafroleError, DisputesError,AssurancesError,ReportingError)):
             if "err" in vector["output"]:
-                # print("Byaah",e.code._value_,vector["output"].get("err"))
-
                 assert vector["output"].get("err") == e.code._value_
             else:
                 raise e
