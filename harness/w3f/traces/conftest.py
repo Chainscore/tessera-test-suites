@@ -8,8 +8,9 @@ def get_all_modules():
 def pytest_addoption(parser):
     parser.addoption("--module", action="store", default=None,
                      help="STF module(s) to test (e.g. safrole, fallback, reports-IO)")
-    parser.addoption("--end", action="store", default="100",
-                     help="Till block")
+    parser.addoption("--pattern", action="store", default="*.json",
+                     help="File glob pattern(s) to match (e.g. --pattern='*.json' --pattern='fee_*.json')")
+
 
 def pytest_generate_tests(metafunc):
     module = metafunc.config.getoption("module")
@@ -18,8 +19,7 @@ def pytest_generate_tests(metafunc):
     else:
         modules = [module]
 
-    end = metafunc.config.getoption("end")
-    print("end", end)
+    pattern = metafunc.config.getoption("pattern")
 
-    params = [(m, end) for m in modules]
-    metafunc.parametrize("module,end", params)
+    params = [(m, pattern) for m in modules]
+    metafunc.parametrize("module,pattern", params)
