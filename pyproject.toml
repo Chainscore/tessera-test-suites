@@ -2,19 +2,18 @@
 name = "tessera-test-suites"
 version = "0.1.0"
 description = "Vector + perf tests for Tessera"
-authors = [
-    {name = "prasad-kumkar",email = "prasad@chainscore.finance"}
-]
-license = {text = "Apache-2.0"}
+authors = [{ name = "prasad-kumkar", email = "prasad@chainscore.finance" }]
+license = { text = "Apache-2.0" }
 readme = "README.md"
 requires-python = "^3.12"
 package-mode = false
 
 [tool.poetry.dependencies]
+deepdiff = "^6.5.0"
 python = "^3.12"
 pytest = "^8.0"
 jam = { path = "../tsr-py", develop = true }
 
 [build-system]
-requires      = ["poetry-core"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

@@ -23,6 +23,10 @@ class AccountStorage(Dictionary[Bytes, Bytes]):
     """Storage dictionary"""
     ...
 
+# @decodable_dictionary(ServiceId, Service, key_name="id", value_name="data")
+# class AccountMetas(Dictionary):
+#     def to_delta(self) -> Delta:
+#   		delta = Delta({})
 
 @decodable_dataclass
 @dataclass
@@ -46,3 +50,8 @@ class InputAccounts(Dictionary):
 								timestamps=LookupTimestamps({})
 						)
 				return delta
+
+
+@decodable_dictionary(ServiceId,tuple[Gas,U32])
+class Stats(Dictionary[ServiceId,tuple[Gas,U32]]):
+    ...
