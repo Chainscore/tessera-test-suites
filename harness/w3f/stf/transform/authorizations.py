@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 from jam.authorization.authorization import Authorization
 from jam.state.ghost import GhostState
 from jam.types.extrinsics.guarantees import (
@@ -43,15 +43,15 @@ def transform_state(vector_state: dict) -> Sigma:
     return state
 
 
-def compare_state(state: Sigma) -> dict:
+def subset_to_compare(state: Sigma) -> Tuple:
     """
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    return {
-        "auth_pools": state.alpha.to_json(),
-        "auth_queues": state.phi.to_json(),
-    }
+    return (
+        state.alpha,
+        state.phi,
+    )
 
 
 transition = Authorization.transition

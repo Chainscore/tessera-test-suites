@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 
 from jam.consensus.safrole.safrole import Safrole
 from jam.state.ghost import GhostState
@@ -34,24 +34,21 @@ def transform_state(vector_state: dict) -> Sigma:
     return state
 
 
-def compare_state(state: Sigma) -> dict:
+def subset_to_compare(state: Sigma) -> Tuple:
     """
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    return {
-        "tau": int(state.tau),
-        "post_offenders": state.psi.offenders.to_json(),
-        "eta": state.eta.to_json(),
-        "lambda": state.lambda_.to_json(),
-        "kappa": state.kappa.to_json(),
-        "gamma_k": state.gamma.k.to_json(),
-        "gamma_a": state.gamma.a.to_json(),
-        "gamma_s": state.gamma.s.to_json(),
-        "gamma_z": state.gamma.z.to_json(),
-        "iota": state.iota.to_json(),
-        "kappa": state.kappa.to_json(),
-    }
+    return (
+        state.tau,
+        state.psi.offenders,
+        state.eta,
+        state.lambda_,
+        state.kappa,
+        state.gamma,
+        state.iota,
+    )
+
 
 
 transition = Safrole.transition

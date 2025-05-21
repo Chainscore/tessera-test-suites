@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 
 from jam.state.ghost import GhostState
 from jam.types.block import Block
@@ -18,18 +18,21 @@ def transform_block(vector_input: dict) -> (Block, Dict):
 
 def transform_state(vector_state: dict) -> Sigma:
     state = GhostState.genesis()
+    for beta in vector_state["beta"]:
+        beta["mmr"]=beta["mmr"]["peaks"]
     state.beta = Beta.from_json(vector_state["beta"])
     return state
 
 
-def compare_state(state: Sigma) -> dict:
+def subset_to_compare(state: Sigma) -> Tuple:
     """
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    return {
-        "beta": state.beta.to_json(),
-    }
+    print("beta bhai",state.beta)
+    return (
+        state.beta,
+    )
 
 
 transition = RecentHistory.transition

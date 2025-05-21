@@ -102,23 +102,22 @@ def transform_state(vector_state: dict) -> Sigma:
     )
     # print(state.pi)
     state.kappa = Kappa.from_json(vector_state["curr_validators"])
-    state.tau = Tau(vector_state["slot"])
+    # state.tau = Tau(vector_state["slot"])
     return state
 
 
-def compare_state(state: Sigma) -> dict:
+def subset_to_compare(state: Sigma) -> Tuple:
     """
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    return {
-        "slot": int(state.tau),
-        "psi": state.psi.to_json(),
-        "rho": state.rho.to_json(),
-        "tau": state.tau.to_json(),
-        "kappa": state.kappa.to_json(),
-        "lambda": state.lambda_.to_json(),
-    }
+    return (
+        state.psi,
+        state.rho,
+        state.tau,
+        state.kappa,
+        state.lambda_,
+    )
 
 
 transition = Statistics.transition
