@@ -57,5 +57,11 @@ def transform_state(vector_state: dict) -> Sigma:
     setup_state(state, main_db)
     return state
 
+def subset_to_compare(state: Sigma) -> dict:
+    """
+    Pull out only the fields we actually want to assert on
+    """
+    return state.rho, state.kappa
+
 
 transition = Accumulation.transition

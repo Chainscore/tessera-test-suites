@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from jam.types.base import U64, U32, Dictionary, decodable_dictionary, Bytes
 from jam.types.protocol.core import Gas, ServiceId
 from jam.types.protocol.crypto import OpaqueHash, Hash
-from jam.types.state.delta import PreImageLookup, AccountStorage as AS, Delta, AccountData as AD, LookupTimestamps
+from jam.types.state.delta import AccountPreimages, AccountStorage as AS, Delta, AccountData as AD, AccountPreimages
 from jam.utils.codec import Codable
 from jam.utils.codec.decorators import decodable_dataclass
 from jam.utils.json import JsonSerde
@@ -32,7 +32,7 @@ class AccountStorage(Dictionary[Bytes, Bytes]):
 @dataclass
 class AccountData(Codable, JsonSerde):
 		service: Service
-		preimages: PreImageLookup
+		preimages: AccountPreimages
 		storage: AccountStorage
 
 @decodable_dictionary(ServiceId, AccountData, key_name="id", value_name="data")
@@ -46,8 +46,8 @@ class InputAccounts(Dictionary):
 								gas_limit=val.service.min_item_gas,
 								min_gas=val.service.min_memo_gas,
 								storage=AS({Hash.blake2b(key): value for key, value in val.storage.items()}),
-								lookup=val.preimages,
-								timestamps=LookupTimestamps({})
+								preimages=val.preimages,
+								lookup=AccountPreimages({})
 						)
 				return delta
 

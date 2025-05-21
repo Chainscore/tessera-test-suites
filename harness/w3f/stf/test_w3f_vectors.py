@@ -27,11 +27,11 @@ def load_stf_module(module: str):
         mod.transform_block,
         mod.transform_state,
         mod.transition,
-        mod.compare_state,
+        mod.subset_to_compare,
     )
 
 def run_case(name: str, vector: dict,
-             tblock, tstate, transition, compare_state):
+             tblock, tstate, transition, subset_to_compare):
     # build inputs
     input_block, args = tblock(vector["input"])
     pre_state       = tstate(vector["pre_state"])
@@ -42,8 +42,8 @@ def run_case(name: str, vector: dict,
         post_actual = transition(deepcopy(pre_state), input_block, **args)
 
         # now just compare the *subset* of fields you actually care about
-        expect_sub = compare_state(post_expect)
-        actual_sub = compare_state(post_actual)
+        expect_sub = subset_to_compare(post_expect)
+        actual_sub = subset_to_compare(post_actual)
 
         diff = DeepDiff(actual_sub, expect_sub,
                         significant_digits=0,
