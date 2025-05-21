@@ -5,7 +5,8 @@ from pathlib import Path
 
 from jam.assurances.assurances import AssurancesError
 from jam.consensus.safrole.errors import SafroleError
-from jam.disputes.error import DisputesError, DisputesErrorCode
+from jam.preimages.errors import PreimageError
+from jam.disputes.error import DisputesError
 
 
 from deepdiff import DeepDiff
@@ -52,7 +53,7 @@ def run_case(name: str, vector: dict,
 
     except Exception as e:
         # only handle SafroleError or DisputesError here:
-        if isinstance(e, (SafroleError, DisputesError,AssurancesError,ReportingError)):
+        if isinstance(e, (SafroleError, DisputesError,AssurancesError,ReportingError,PreimageError)):
             if "err" in vector["output"]:
                 assert vector["output"].get("err") == e.code._value_
             else:

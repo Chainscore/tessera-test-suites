@@ -51,7 +51,6 @@ def compare_state(state: Sigma) -> dict:
         "gamma_z": state.gamma.z.to_json(),
         "iota": state.iota.to_json(),
         "kappa": state.kappa.to_json(),
-        "kappa": state.kappa.to_json(),
     }
 
 

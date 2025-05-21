@@ -13,6 +13,7 @@ from jam.types.extrinsics.guarantees import (
     ReportGuarantee,
 )
 from jam.types.state.chi import Chi
+from jam.types.state.delta import Delta
 from jam.types.state.eta import Eta
 from jam.types.state.nu import Nu
 from jam.types.state.pi import AllServiceStats
@@ -52,16 +53,28 @@ def transform_state(vector_state: dict) -> Sigma:
     state.chi = Chi.from_json(vector_state["privileges"])
     state.pi.services = AllServiceStats.from_json(vector_state["statistics"])
     state.delta = InputAccounts.from_json(vector_state["accounts"]).to_delta()
+    # state.delta = Delta.from_json(vector_state["accounts"])
+
     state.nu = Nu.from_json(vector_state["ready_queue"])
     state.xi = Xi.from_json(vector_state["accumulated"])
     setup_state(state, main_db)
     return state
 
-def subset_to_compare(state: Sigma) -> dict:
+def subset_to_compare(state: Sigma) -> Tuple:
     """
     Pull out only the fields we actually want to assert on
+    (validator‐stats and slot in this example).
     """
-    return state.rho, state.kappa
+
+    return (
+        state.tau,
+        state.eta,
+        state.nu,
+        state.xi,
+        state.chi,
+        state.pi,
+        state.delta
+    )
 
 
 transition = Accumulation.transition
