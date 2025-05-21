@@ -14,3 +14,7 @@
 	path = ext/w3f-w-traces
 	url = https://github.com/davxy/jam-test-vectors.git
 	branch = traces
+[submodule "ext/arkpar-trie"]
+	path = ext/arkpar-trie
+	url = https://github.com/arkpar/jamtestvectors.git
+	branch = arkpar/trie

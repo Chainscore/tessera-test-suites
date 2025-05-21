@@ -23,7 +23,7 @@ def test_traces(module, pattern, db_path):
         db = KVStore(db_path)
         block = Block.from_json(vector["block"])
 
-        gen_path = Path(__file__).parent / f"{module}-genesis.json"
+        gen_path = Path(__file__).parent / "genesis.json"
         state = setup_state(GhostState.genesis(genesis_path=gen_path), db)
         if len(vector["pre_state"]["keyvals"]) != 0:
             trie = StateTrie()
