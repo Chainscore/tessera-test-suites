@@ -2,7 +2,7 @@ from typing import Dict
 from typing import Optional
 
 
-from harness.w3f.stf.types import InputAccounts, Service
+# from harness.w3f.stf.types import AccountMetas, InputAccounts, Service
 from jam.report.state import Reporting
 from jam.state.ghost import GhostState
 from jam.types.block import Block
@@ -10,6 +10,7 @@ from jam.types.protocol.crypto import OpaqueHash, Hash
 from jam.types.protocol.core import TimeSlot
 from jam.types.state.alpha import Alpha
 from jam.types.state.beta import Beta
+from jam.types.state.delta import Delta
 from jam.types.state.eta import Eta
 from jam.types.state.kappa import Kappa
 from jam.types.state.lambda_ import Lambda_
@@ -45,9 +46,6 @@ def transform_state(vector_state: dict) -> Sigma:
     for block in vector_state["recent_blocks"]:
         block["mmr"] = block["mmr"]["peaks"]
         block["packages"] = []
-    for account in vector_state["accounts"]:
-        account["data"]["storage"] = []
-        account["data"]["preimages"] = []
 
     state.rho = Rho.from_json(vector_state["avail_assignments"])
     state.eta = Eta.from_json(vector_state["entropy"])
@@ -58,8 +56,7 @@ def transform_state(vector_state: dict) -> Sigma:
     state.kappa = Kappa.from_json(vector_state["curr_validators"])
     state.lambda_ = Lambda_.from_json(vector_state["prev_validators"])
     state.psi.offenders = PsiO.from_json(vector_state["offenders"])
-    state.delta = InputAccounts.from_json(vector_state["accounts"]).to_delta()
-
+    state.delta= Delta.from_json(vector_state["accounts"])
     return state
 
 
@@ -68,10 +65,7 @@ def compare_state(state: Sigma) -> dict:
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    accounts = state.delta.to_json()
-    for account in accounts:
-        del account["data"]["storage"]
-        del account["data"]["preimages"]
+
     return {
         "avail_assignments": state.rho.to_json(),
         "entropy": state.eta.to_json(),
@@ -82,7 +76,7 @@ def compare_state(state: Sigma) -> dict:
         "curr_validators": state.pi.vals_current.to_json(),
         "prev_validators": state.pi.vals_last.to_json(),
         "offenders": state.psi.offenders.to_json(),
-        "accounts": accounts,
+        "accounts": state.delta.to_json(),
     }
 
 
