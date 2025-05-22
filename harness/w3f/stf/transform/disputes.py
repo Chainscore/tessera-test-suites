@@ -53,21 +53,17 @@ def transform_state(vector_state: dict) -> Sigma:
     return state
 
 
-def compare_state(state: Sigma) -> dict:
+def subset_to_compare(state: Sigma) -> Tuple:
     """
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    return {
-        "slot": int(state.tau),
-        "vals_curr_stats": state.pi.vals_current.to_json(),
-        "vals_last_stats": state.pi.vals_last.to_json(),
-        "curr_validators": state.kappa.to_json(),
-        # if you do want to check core‐ or service‐stats you can
-        # add them here:
-        # "cores_stats": state.pi.cores.to_json(),
-        # "services_stats": state.pi.services.to_json(),
-    }
+    return (
+        state.tau,
+        state.pi.vals_current,
+        state.pi.vals_last,
+        state.kappa,
+    )
 
 
 transition = Disputes.transition

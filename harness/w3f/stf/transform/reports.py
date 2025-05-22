@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 from typing import Optional
 
 
@@ -60,24 +60,24 @@ def transform_state(vector_state: dict) -> Sigma:
     return state
 
 
-def compare_state(state: Sigma) -> dict:
+def subset_to_compare(state: Sigma) -> Tuple:
     """
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
 
-    return {
-        "avail_assignments": state.rho.to_json(),
-        "entropy": state.eta.to_json(),
-        "auth_pools": state.alpha.to_json(),
-        "recent_blocks": state.beta.to_json(),
-        "cores_statistics": state.pi.cores.to_json(),
-        "services_statistics": state.pi.services.to_json(),
-        "curr_validators": state.pi.vals_current.to_json(),
-        "prev_validators": state.pi.vals_last.to_json(),
-        "offenders": state.psi.offenders.to_json(),
-        "accounts": state.delta.to_json(),
-    }
+    return (
+        state.rho,
+        state.eta,
+        state.alpha,
+        state.beta,
+        state.pi.cores,
+        state.pi.services,
+        state.kappa,
+        state.pi.lambda_,
+        state.psi.offenders,
+        state.delta,
+    )
 
 
 transition = Reporting.transition
