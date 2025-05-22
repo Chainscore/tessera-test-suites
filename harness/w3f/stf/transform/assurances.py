@@ -14,9 +14,7 @@ def transform_block(vector_input: dict) -> (Block, Dict):
     block = Block.genesis()
     block.header.slot = Tau(vector_input["slot"])
     block.header.parent = HeaderHash(vector_input["parent"])
-    block.extrinsic.assurances = AssurancesExtrinsic.from_json(
-        vector_input["assurances"]
-    )
+    block.extrinsic.assurances = AssurancesExtrinsic.from_json(vector_input["assurances"])
     return block, {}
 
 
@@ -26,12 +24,13 @@ def transform_state(vector_state: dict) -> Sigma:
     state.kappa = Kappa.from_json(vector_state["curr_validators"])
     return state
 
-
-def subset_to_compare(state: Sigma) -> Tuple:
+def subset_to_compare(state) -> Tuple:
     """
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    return state.rho, state.kappa
+    return state,
 
-transition = Assurances.transition
+def transition(state, block):
+    _, new_wrs = Assurances.transition(state, block)
+    return state
