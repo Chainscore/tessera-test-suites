@@ -46,10 +46,14 @@ def run_case(name: str, vector: dict,
         expect_sub = subset_to_compare(post_expect)
         actual_sub = subset_to_compare(post_actual)
 
-        diff = DeepDiff(actual_sub, expect_sub,
+        diff = DeepDiff([val.to_json() for val in actual_sub], [val.to_json() for val in expect_sub],
                         significant_digits=0,
                         verbose_level=2)
         assert diff == {}, f"\nState Diff: {name}\n{diff.pretty()}"
+        # diff = DeepDiff([actual_sub], [expect_sub],
+        #                 significant_digits=0,
+        #                 verbose_level=2)
+        # assert diff == {}, f"\nState Diff: {name}\n{diff.pretty()}"
 
     except Exception as e:
         # only handle SafroleError or DisputesError here:
