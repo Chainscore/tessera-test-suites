@@ -8,7 +8,7 @@ from jam.types.extrinsics.guarantees import (
 )
 from jam.types.state.phi import Phi
 from jam.types.state.alpha import Alpha
-from jam.types.protocol.core import CoreIndex
+from jam.types.protocol.core import CoreIndex, OpaqueHash
 
 
 from jam.types.block import Block
@@ -25,9 +25,9 @@ def transform_block(vector_input: dict) -> (Block, Dict):
             ReportGuarantee(
                 report=WorkReport.empty(
                     core_index=CoreIndex(report["core"]),
-                    authorizer_hash=report["auth_hash"],
+                    authorizer_hash=OpaqueHash(report["auth_hash"]),
                 ),
-                slot=block.header.slot,
+                slot=Tau(block.header.slot),
                 signatures=ValidatorSignatures([]),
             )
             for report in vector_input["auths"]
@@ -38,12 +38,12 @@ def transform_block(vector_input: dict) -> (Block, Dict):
 
 def transform_state(vector_state: dict) -> Sigma:
     state = GhostState.genesis()
-    state.rho = Alpha.from_json(vector_state["auth_pools"])
-    state.kappa = Phi.from_json(vector_state["auth_queues"])
+    state.alpha = Alpha.from_json(vector_state["auth_pools"])
+    state.phi = Phi.from_json(vector_state["auth_queues"])
     return state
 
 
-def subset_to_compare(state: Sigma) -> Tuple:
+def subset_to_compare(state: Sigma) -> Tuple[Alpha,Phi]:
     """
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
