@@ -36,3 +36,5 @@ def subset_to_compare(state: Sigma) -> Tuple:
 
 
 transition = Preimages.transition
+
+spec="data"

@@ -29,7 +29,8 @@ def load_stf_module(module: str):
         mod.transform_state,
         mod.transition,
         mod.subset_to_compare,
-    )
+        getattr(mod, "spec", None)  # safely get .spec if defined
+        )
 
 def run_case(name: str, vector: dict,
              tblock, tstate, transition, subset_to_compare):
@@ -67,7 +68,8 @@ def run_case(name: str, vector: dict,
             raise e
 
 def test_stf_vectors(module, spec, pattern):
-    tblock, tstate, transition, compare_state = load_stf_module(module)
+    tblock, tstate, transition, compare_state,default_spec = load_stf_module(module)
+    spec = default_spec if default_spec is not None else spec
     for name, vector in fetch_vectors(module, spec, pattern):
         print(f"\n ⏭️ Running test case {name} ...")
         run_case(name, vector, tblock, tstate, transition, compare_state)

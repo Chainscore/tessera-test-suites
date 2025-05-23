@@ -63,3 +63,5 @@ def subset_to_compare(state: Sigma) -> Tuple[Beta]:
 
 
 transition = RecentHistory.transition
+
+spec="data"
