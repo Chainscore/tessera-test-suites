@@ -48,10 +48,10 @@ def run_case(name: str, vector: dict,
 
 
         from deepdiff import DeepDiff
-        for ours, thiers in zip(expect_sub,actual_sub):
-            value_diff = DeepDiff(thiers.to_json(), ours.to_json(), significant_digits=0, verbose_level=2)
+        for theirs, ours in zip(expect_sub,actual_sub):
+            value_diff = DeepDiff(ours.to_json(), theirs.to_json(), significant_digits=0, verbose_level=2)
             assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
-            types_diff = DeepDiff(thiers, ours, significant_digits=0, verbose_level=2)
+            types_diff = DeepDiff(ours, theirs, significant_digits=0, verbose_level=2)
             assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"
 
 

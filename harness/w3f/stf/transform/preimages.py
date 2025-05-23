@@ -21,6 +21,7 @@ def transform_state(vector_state: dict) -> Sigma:
     state = GhostState.genesis()
     state.pi.services = AllServiceStats.from_json(vector_state["statistics"])
     state.delta = Delta.from_json(vector_state["accounts"])
+    print(state.delta)
     return state
 
 
