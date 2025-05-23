@@ -73,8 +73,8 @@ def transform_block(vector_input: dict) -> (Block, Dict):
 
     return block, {
         "available_wrs": WorkReports([]),
-        "accumulation_stats": Stats(),
-        "deferred_transfer_stats": Stats(),
+        # "accumulation_stats": Stats(), TODO: When we add deffered and accumulations (on testCase/func) to the funcions we add this
+        # "deferred_transfer_stats": Stats(),
     }
 
 

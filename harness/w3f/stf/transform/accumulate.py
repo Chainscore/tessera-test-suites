@@ -8,6 +8,7 @@ from jam.state.state import setup_state
 from jam.types.block import Block
 from jam.types.protocol.core import TimeSlot
 from jam.types.state.chi import Chi
+from jam.types.state.delta import Delta
 from jam.types.state.eta import Eta
 from jam.types.state.nu import Nu
 from jam.types.state.pi import AllServiceStats
@@ -36,7 +37,7 @@ def transform_state(vector_state: dict) -> Sigma:
     )
     state.chi = Chi.from_json(vector_state["privileges"])
     state.pi.services = AllServiceStats.from_json(vector_state["statistics"])
-    state.delta = InputAccounts.from_json(vector_state["accounts"]).to_delta()
+    state.delta = Delta.from_json(vector_state["accounts"])
     # @akash
     # state.delta = Delta.from_json(vector_state["accounts"])
 
