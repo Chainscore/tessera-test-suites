@@ -5,6 +5,7 @@ from pathlib import Path
 
 from jam.assurances.assurances import AssurancesError
 from jam.consensus.safrole.errors import SafroleError
+from jam.error import JamError
 from jam.preimages.errors import PreimageError
 from jam.disputes.error import DisputesError
 
@@ -46,7 +47,6 @@ def run_case(name: str, vector: dict,
         expect_sub = subset_to_compare(post_expect)
         actual_sub = subset_to_compare(post_actual)
 
-
         from deepdiff import DeepDiff
         for ours, thiers in zip(expect_sub,actual_sub):
             value_diff = DeepDiff(thiers.to_json(), ours.to_json(), significant_digits=0, verbose_level=2)
@@ -54,17 +54,8 @@ def run_case(name: str, vector: dict,
             types_diff = DeepDiff(thiers, ours, significant_digits=0, verbose_level=2)
             assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"
 
-
-    except Exception as e:
-        # only handle SafroleError or DisputesError here:
-        if isinstance(e, (SafroleError, DisputesError,AssurancesError,ReportingError,PreimageError)):
-            if "err" in vector["output"]:
-                assert vector["output"].get("err") == e.code._value_
-            else:
-                raise e
-        else:
-            # re-raise any other unexpected exception
-            raise e
+    except JamError as e:
+        assert vector["output"].get("err") == e.code
 
 def test_stf_vectors(module, spec, pattern):
     tblock, tstate, transition, compare_state = load_stf_module(module)

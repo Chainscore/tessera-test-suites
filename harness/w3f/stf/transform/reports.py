@@ -33,12 +33,12 @@ def transform_block(vector_input: dict) -> (Block, Dict):
     block.extrinsic.guarantees = GuaranteesExtrinsic.from_json(
         vector_input["guarantees"]
     )
-    # root_arr = vector_input.get("known_packages")
-    # if root_arr is None:
-    #     roots = None
-    # else:
-    #     roots = [OpaqueHash(h) for h in root_arr]
-    return block, {}
+    root_arr = vector_input.get("known_packages")
+    if root_arr is None:
+        roots = None
+    else:
+        roots = [OpaqueHash(h) for h in root_arr]
+    return block, {"known_packages": roots}
 
 
 def transform_state(vector_state: dict) -> Sigma:

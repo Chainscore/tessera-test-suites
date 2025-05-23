@@ -25,6 +25,7 @@ def test_traces(module, pattern, db_path):
 
         gen_path = Path(__file__).parent / "genesis.json"
         state = setup_state(GhostState.genesis(genesis_path=gen_path), db)
+
         if len(vector["pre_state"]["keyvals"]) != 0:
             trie = StateTrie()
             trie.merkelize({Bytes(keyval["key"]):Bytes(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}, db)
