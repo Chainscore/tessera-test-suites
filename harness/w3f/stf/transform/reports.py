@@ -66,18 +66,7 @@ def subset_to_compare(state: Sigma) -> Tuple:
     (validator‐stats and slot in this example).
     """
 
-    return (
-        state.rho,
-        state.eta,
-        state.alpha,
-        state.beta,
-        state.pi.cores,
-        state.pi.services,
-        state.kappa,
-        state.pi.lambda_,
-        state.psi.offenders,
-        state.delta,
-    )
+    return state,
 
 
 transition = Reporting.transition

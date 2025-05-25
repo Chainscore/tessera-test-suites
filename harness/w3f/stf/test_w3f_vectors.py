@@ -32,17 +32,17 @@ def load_stf_module(module: str):
         mod.subset_to_compare,
     )
 
-def run_case(name: str, vector: dict,
-             tblock, tstate, transition, subset_to_compare):
+def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_compare):
     # build inputs
-    input_block, args = tblock(vector["input"])
-    pre_state       = tstate(vector["pre_state"])
+    input_block, args   = tblock(vector["input"])
+    pre_state           = tstate(vector["pre_state"])
 
     try:
         # expected + actual post-states
         post_expect = tstate(vector["post_state"])
         post_actual = transition(deepcopy(pre_state), input_block, **args)
 
+        assert vector["output"].get("err") is None
         # now just compare the *subset* of fields you actually care about
         expect_sub = subset_to_compare(post_expect)
         actual_sub = subset_to_compare(post_actual)
@@ -51,11 +51,11 @@ def run_case(name: str, vector: dict,
         for ours, thiers in zip(expect_sub,actual_sub):
             value_diff = DeepDiff(thiers.to_json(), ours.to_json(), significant_digits=0, verbose_level=2)
             assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
-            types_diff = DeepDiff(thiers, ours, significant_digits=0, verbose_level=2)
-            assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"
+            # types_diff = DeepDiff(thiers, ours, significant_digits=0, verbose_level=2)
+            # assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"
 
     except JamError as e:
-        assert vector["output"].get("err") == e.code
+        assert vector["output"].get("err") == e.code.value
 
 def test_stf_vectors(module, spec, pattern):
     tblock, tstate, transition, compare_state = load_stf_module(module)

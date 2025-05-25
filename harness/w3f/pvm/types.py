@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 from typing import Any
 from jam.execution.pvm.memory import Memory
-from jam.execution.pvm.register import Registers
-from jam.execution.pvm.status import ExecutionStatus
+from jam.types.base import Array, decodable_array
 from jam.types.base.integers.fixed import U32
 from jam.types.base.sequences.bytes.bit_array import Byte
 from jam.types.base.sequences.vector import Vector, decodable_vector
 from jam.types.base.string import String
-from jam.types.protocol.core import Gas
+from jam.types.protocol.core import Gas, Register
 from jam.utils.codec.codable import Codable
 from jam.utils.codec.decorators.dataclasses import decodable_dataclass
 from jam.utils.json.decorators import with_json_metadata
@@ -25,6 +24,8 @@ class Page(Codable, JsonSerde):
     length: U32
     is_writable: Boolean
 
+@decodable_array(13, Register)
+class Registers(Array): ...
 
 @decodable_vector(Page)
 class PageMap(Vector):
@@ -44,10 +45,11 @@ class MemoryChunk(Vector):
         allowed_write_pages = []
         for memory_entry in self:
             for i, byte in enumerate(memory_entry.contents):
-                memory_data[memory_entry.address + i] = Byte(byte)
+                memory_data[int(memory_entry.address + i)] = int.from_bytes(byte)
         for page in page_map:
             if page.is_writable:
                 allowed_write_pages.append(page.address // 2**12)
+                allowed_read_pages.append(page.address // 2**12)
             else:
                 allowed_read_pages.append(page.address // 2**12)
         memory = Memory(memory_data, allowed_read_pages, allowed_write_pages)
