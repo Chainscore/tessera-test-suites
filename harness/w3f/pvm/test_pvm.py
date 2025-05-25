@@ -18,8 +18,8 @@ def test_pvm_vectors(pattern):
         print("\nProcessing test case: ", tc.name)
         status, pc, gas, registers, memory = PVM.execute(
             bytes(tc.program),
-            tc.initial_pc,
-            tc.initial_gas,
+            int(tc.initial_pc),
+            int(tc.initial_gas),
             tc.initial_regs,
             tc.initial_memory.to_memory(tc.initial_page_map),
         )

@@ -53,29 +53,29 @@ def test_traces(module, pattern, db_path):
         state.transition(block)
         from deepdiff import DeepDiff
 
-        # post_data = {Bytes(keyval["key"]): Bytes(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
-        # post_trie = StateTrie()
-        # post_trie.merkelize(post_data, post_db)
-        # post_state = State(post_db, post_trie)
-        #
-        # if post_state.pi != state.pi:
-        #     print("MISMATCHED PI")
-        #     print("DIFF", DeepDiff(state.pi.to_json(), post_state.pi.to_json(), significant_digits=0, verbose_level=2, view="tree"))
-        #     print("PRE PI", PRE_PI)
-        # if post_state.rho != state.rho:
-        #     print("MISMATCHED RHO")
-        #     print("DIFF", DeepDiff(state.rho.to_json(), post_state.rho.to_json(), significant_digits=0, verbose_level=2, view="tree"))
-        #     print("PRE RHO", PRE_RHO)
-        # if post_state.beta != state.beta:
-        #     print("MISMATCHED BETA")
-        #     print("DIFF", DeepDiff(state.beta.to_json(), post_state.beta.to_json(), significant_digits=0, verbose_level=2, view="tree"))
-        #     print("PRE BETA", PRE_BETA)
+        post_data = {Bytes(keyval["key"]): Bytes(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
+        post_trie = StateTrie()
+        post_trie.merkelize(post_data, post_db)
+        post_state = State(post_db, post_trie)
 
-        # actual = {key.hex(): value.hex() for key, value in state.DB.get_all().items()}
-        # expected = {bytes.fromhex(keyval["key"][2:]).hex(): bytes.fromhex(keyval["value"][2:]).hex() for keyval in vector["post_state"]["keyvals"]}
-        # value_diff = DeepDiff(actual, expected, significant_digits=0, verbose_level=2, view="tree")
-        # assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
-        # assert str(state.root) == vector["post_state"]["state_root"]
+        if post_state.pi != state.pi:
+            print("MISMATCHED PI")
+            print("DIFF", DeepDiff(state.pi.to_json(), post_state.pi.to_json(), significant_digits=0, verbose_level=2, view="tree"))
+            print("PRE PI", PRE_PI)
+        if post_state.rho != state.rho:
+            print("MISMATCHED RHO")
+            print("DIFF", DeepDiff(state.rho.to_json(), post_state.rho.to_json(), significant_digits=0, verbose_level=2, view="tree"))
+            print("PRE RHO", PRE_RHO)
+        if post_state.beta != state.beta:
+            print("MISMATCHED BETA")
+            print("DIFF", DeepDiff(state.beta.to_json(), post_state.beta.to_json(), significant_digits=0, verbose_level=2, view="tree"))
+            print("PRE BETA", PRE_BETA)
+
+        actual = {key.hex(): value.hex() for key, value in state.DB.get_all().items()}
+        expected = {bytes.fromhex(keyval["key"][2:]).hex(): bytes.fromhex(keyval["value"][2:]).hex() for keyval in vector["post_state"]["keyvals"]}
+        value_diff = DeepDiff(actual, expected, significant_digits=0, verbose_level=2, view="tree")
+        assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
+        assert str(state.root) == vector["post_state"]["state_root"]
         print("✅Passed")
 
 # def test_all_traces(modules, db_path):
