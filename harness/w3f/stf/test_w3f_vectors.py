@@ -11,7 +11,7 @@ from jam.disputes.error import DisputesError
 
 
 from deepdiff import DeepDiff
-from jam.report.state import ReportingError
+# from jam.report.state import ReportingError
 
 STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
 
@@ -42,7 +42,8 @@ def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_comp
         post_expect = tstate(vector["post_state"])
         post_actual = transition(deepcopy(pre_state), input_block, **args)
 
-        assert vector["output"].get("err") is None
+        if vector["output"]:
+            assert vector["output"].get("err") is None
         # now just compare the *subset* of fields you actually care about
         expect_sub = subset_to_compare(post_expect)
         actual_sub = subset_to_compare(post_actual)
