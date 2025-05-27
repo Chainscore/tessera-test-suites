@@ -1,0 +1,69 @@
+import json
+import importlib
+from copy import deepcopy
+from pathlib import Path
+
+from jam.assurances.assurances import AssurancesError
+from jam.consensus.safrole.errors import SafroleError
+from jam.error import JamError
+from jam.preimages.errors import PreimageError
+from jam.disputes.error import DisputesError
+
+
+from deepdiff import DeepDiff
+# from jam.report.state import ReportingError
+
+STF_ROOT = Path(__file__).parents[3] / "ext" / "jamduna" / "data"
+
+print("stfNNN", STF_ROOT)
+def fetch_vectors(module: str, spec: str, pattern: str):
+    vector_dir = STF_ROOT / module / spec
+    print("vector_dir", vector_dir)
+    return [
+        (f.name, json.load(open(f)))
+        for f in vector_dir.glob(pattern)
+    ]
+
+def load_stf_module(module: str):
+    mod = importlib.import_module(f"harness.jamduna.stf.transform.{module}")
+    print("mod333", mod)
+    return (
+        mod.transform_block,
+        mod.parse_keyval_state,
+        # Add your transition and subset_to_compare if needed
+        lambda state, block, **args: state,  # Dummy transition
+        lambda state: [state],               # Dummy subset_to_compare
+    )
+
+def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_compare):
+    # build inputs
+    input_block, args   = tblock(vector["input"])
+    pre_state           = tstate(vector["pre_state"])
+
+    try:
+        # expected + actual post-states
+        post_expect = tstate(vector["post_state"])
+        post_actual = transition(deepcopy(pre_state), input_block, **args)
+
+        if vector["output"]:
+            assert vector["output"].get("err") is None
+        # now just compare the *subset* of fields you actually care about
+        expect_sub = subset_to_compare(post_expect)
+        actual_sub = subset_to_compare(post_actual)
+
+        from deepdiff import DeepDiff
+        for ours, thiers in zip(expect_sub,actual_sub):
+            value_diff = DeepDiff(thiers.to_json(), ours.to_json(), significant_digits=0, verbose_level=2)
+            assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
+            # types_diff = DeepDiff(thiers, ours, significant_digits=0, verbose_level=2)
+            # assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"
+
+    except JamError as e:
+        assert vector["output"].get("err") == e.code.value
+
+def test_stf_vectors(module, spec, pattern):
+    tblock, tstate, transition, compare_state = load_stf_module(module)
+    for name, vector in fetch_vectors(module, spec, pattern):
+        print(f"\n ⏭️ Running test case {name} ...")
+        run_case(name, vector, tblock, tstate, transition, compare_state)
+        print("✅ Passed")
