@@ -37,7 +37,7 @@ def transform_state(vector_state: dict) -> Sigma:
     )
     state.chi = Chi.from_json(vector_state["privileges"])
     state.pi.services = AllServiceStats.from_json(vector_state["statistics"])
-    state.delta = Delta.from_json(vector_state["accounts"])
+    state.delta = InputAccounts.from_json(vector_state["accounts"]).to_delta()
     # @akash
     # state.delta = Delta.from_json(vector_state["accounts"])
 
@@ -51,7 +51,9 @@ def subset_to_compare(state: Sigma) -> Tuple:
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    return [state]
+    if isinstance(state, tuple):
+        return state[0],
+    return state,
 
 
 transition = Accumulation.transition
