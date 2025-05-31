@@ -24,7 +24,6 @@ from jam.types.extrinsics.guarantees import (
     ReportGuarantee,
     ValidatorSignatures,
 )
-from jam.types.work.report import WorkReport
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):

@@ -1,9 +1,7 @@
 from dataclasses import dataclass
-from typing import Any
 from jam.execution.pvm.memory import Memory
 from jam.types.base import Array, decodable_array
 from jam.types.base.integers.fixed import U32
-from jam.types.base.sequences.bytes.bit_array import Byte
 from jam.types.base.sequences.vector import Vector, decodable_vector
 from jam.types.base.string import String
 from jam.types.protocol.core import Gas, Register
@@ -11,7 +9,7 @@ from jam.utils.codec.codable import Codable
 from jam.utils.codec.decorators.dataclasses import decodable_dataclass
 from jam.utils.json.decorators import with_json_metadata
 from jam.utils.json.serde import JsonSerde
-from jam.types.base.sequences.bytes.bytes import Bytes
+from jam.types.base.bytes.bytes import Bytes
 from jam.types.base.boolean import Boolean
 
 @with_json_metadata(

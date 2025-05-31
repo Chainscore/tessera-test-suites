@@ -12,7 +12,7 @@ package-mode = false
 deepdiff = "^6.5.0"
 python = "^3.12"
 pytest = "^8.0"
-jam = { path = "../tsr-py", develop = true }
+jam = { path = "../tessera", develop = true }
 
 [build-system]
 requires = ["poetry-core"]
