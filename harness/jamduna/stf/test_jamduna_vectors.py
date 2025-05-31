@@ -51,7 +51,7 @@ def test_traces(module, pattern, db_path, spec):
             PRE_RHO = state.rho
 
             state.transition(block)
-            print("state", state)
+
             from deepdiff import DeepDiff
 
             post_data = {Bytes(keyval["key"]): Bytes(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}

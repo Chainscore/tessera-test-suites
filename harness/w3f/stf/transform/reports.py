@@ -3,7 +3,7 @@ from typing import Optional
 
 
 # from harness.w3f.stf.types import AccountMetas, InputAccounts, Service
-from jam.report.state import Reporting
+from jam.report.reporting import Reporting
 from jam.state.ghost import GhostState
 from jam.types.block import Block
 from jam.types.protocol.crypto import OpaqueHash, Hash
@@ -24,7 +24,6 @@ from jam.types.extrinsics.guarantees import (
     ReportGuarantee,
     ValidatorSignatures,
 )
-from jam.types.work.report import WorkReport
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):
