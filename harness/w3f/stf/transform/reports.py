@@ -56,7 +56,8 @@ def transform_state(vector_state: dict) -> Sigma:
     state.kappa = Kappa.from_json(vector_state["curr_validators"])
     state.lambda_ = Lambda_.from_json(vector_state["prev_validators"])
     state.psi.offenders = PsiO.from_json(vector_state["offenders"])
-    state.delta= Delta.from_json(vector_state["accounts"])
+    state.delta = Delta.from_json(vector_state["accounts"])
+    state.tau = TimeSlot(16)
     return state
 
 
