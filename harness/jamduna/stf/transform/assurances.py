@@ -12,7 +12,7 @@ from jam.types.state.tau import Tau
 from jam.types.base import Bytes
 from jam.state.merkle import StateTrie
 from jam.state.state import State, setup_state, set_state
-from jam.storage.db.kv import KVStore
+from rockstore import RockStore
 from pathlib import Path
 from jam.config.logging import logger
 

@@ -10,11 +10,10 @@ from jam.types.state.phi import Phi
 from jam.types.state.alpha import Alpha
 from jam.types.protocol.core import CoreIndex, OpaqueHash
 
-
 from jam.types.block import Block
 from jam.types.state.sigma import Sigma
 from jam.types.state.tau import Tau
-from jam.types.work.report import WorkReport
+from jam.types.work import WorkReport
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):
@@ -25,7 +24,7 @@ def transform_block(vector_input: dict) -> (Block, Dict):
             ReportGuarantee(
                 report=WorkReport.empty(
                     core_index=CoreIndex(report["core"]),
-                    authorizer_hash=OpaqueHash(report["auth_hash"]),
+                    authorizer_hash=OpaqueHash.from_json(report["auth_hash"]),
                 ),
                 slot=Tau(block.header.slot),
                 signatures=ValidatorSignatures([]),

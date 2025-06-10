@@ -1,16 +1,11 @@
 from typing import Tuple, Dict
-from harness.w3f.stf.types import Stats
 from jam.state.ghost import GhostState
 from jam.types.protocol.core import ValidatorIndex
-from jam.types.base.integers.fixed import U32
-from jam.types.header import Header
-from jam.types.state.iota import Iota
 from jam.types.state.kappa import Kappa
-from jam.types.work.report import WorkReports
+from jam.types.work import WorkReports
 from jam.utils.constants import CORE_COUNT
 from jam.types.block import Block
 
-# from jam.types.extrinsics import PreimagesExtrinsic, TicketsExtrinsic
 from jam.types.state.pi import (
     AllCoreStats,
     AllServiceStats,
@@ -28,27 +23,17 @@ from jam.types.extrinsics.preimages import PreimagesExtrinsic
 from jam.types.extrinsics.assurances import AssurancesExtrinsic
 
 from jam.types.extrinsics.tickets import (
-    TicketEnvelope,
-    TicketBody,
-    TicketsAccumulator,
-    KeysAccumulator,
     TicketsExtrinsic,
 )
 
 from jam.types.extrinsics.disputes import (
-    Verdict,
-    Culprit,
-    Judgement,
     DisputesExtrinsic,
-    Fault,
-    DisputesRecords,
 )
 
 from jam.types.extrinsics.guarantees import (
-    ValidatorSignature,
-    ReportGuarantee,
     GuaranteesExtrinsic,
 )
+from tsrkit_types import U32
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):
@@ -56,7 +41,7 @@ def transform_block(vector_input: dict) -> (Block, Dict):
     block.header.slot = Tau(vector_input["slot"])
     block.header.author_index = ValidatorIndex(vector_input["author_index"])
     block.extrinsic.tickets = TicketsExtrinsic.from_json(
-        vector_input["extrinsic"]["tickets"]
+        vector_input["extrinsic"]["ticket.py"]
     )
     block.extrinsic.preimages = PreimagesExtrinsic.from_json(
         vector_input["extrinsic"]["preimages"]
@@ -83,26 +68,10 @@ def transform_state(vector_state: dict) -> Sigma:
     state.pi = Pi(
         vals_current=AllValidatorStats.from_json(vector_state["vals_curr_stats"]),
         vals_last=AllValidatorStats.from_json(vector_state["vals_last_stats"]),
-        cores=AllCoreStats(
-            [
-                CoreStat(
-                    gas_used=U32(0),
-                    imports=U32(0),
-                    extrinsic_count=U32(0),
-                    extrinsic_size=U32(0),
-                    exports=U32(0),
-                    bundle_size=U32(0),
-                    da_load=U32(0),
-                    popularity=U32(0),
-                )
-                for _ in range(CORE_COUNT)
-            ]
-        ),
+        cores=AllCoreStats.empty(),
         services=AllServiceStats({}),
     )
-    # print(state.pi)
     state.kappa = Kappa.from_json(vector_state["curr_validators"])
-    # state.tau = Tau(vector_state["slot"])
     return state
 
 

@@ -1,8 +1,4 @@
 from typing import Dict, Tuple
-from typing import Optional
-
-
-# from harness.w3f.stf.types import AccountMetas, InputAccounts, Service
 from jam.report.reporting import Reporting
 from jam.state.ghost import GhostState
 from jam.types.block import Block
@@ -21,8 +17,6 @@ from jam.types.state.rho import Rho
 from jam.types.state.tau import Tau
 from jam.types.extrinsics.guarantees import (
     GuaranteesExtrinsic,
-    ReportGuarantee,
-    ValidatorSignatures,
 )
 
 
@@ -36,14 +30,15 @@ def transform_block(vector_input: dict) -> (Block, Dict):
     if root_arr is None:
         roots = None
     else:
-        roots = [OpaqueHash(h) for h in root_arr]
+        roots = [OpaqueHash.from_json(h) for h in root_arr]
     return block, {"known_packages": roots}
 
 
 def transform_state(vector_state: dict) -> Sigma:
     state = GhostState.genesis()
     for block in vector_state["recent_blocks"]:
-        block["mmr"] = block["mmr"]["peaks"]
+        if not isinstance(block["mmr"], list):
+            block["mmr"] = block["mmr"]["peaks"]
         block["packages"] = []
 
     state.rho = Rho.from_json(vector_state["avail_assignments"])

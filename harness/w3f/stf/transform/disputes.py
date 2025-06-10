@@ -45,7 +45,6 @@ def transform_block(vector_input: dict) -> (Block, Dict):
 def transform_state(vector_state: dict) -> Sigma:
     state = GhostState.genesis()
     state.psi = Psi.from_json(vector_state["psi"])
-    # state.rho=Rho.from_json(vector_state["rho"])
     state.tau = Tau.from_json(vector_state["tau"])
     state.rho = Rho.from_json(vector_state["rho"])
     state.lambda_ = Lambda_.from_json(vector_state["lambda"])

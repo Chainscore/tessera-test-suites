@@ -1,14 +1,14 @@
 import json
 from pathlib import Path
 
+from tsrkit_types import Bytes
+
 from jam.config.logging import logger
 from jam.state.ghost import GhostState
 from jam.state.merkle import StateTrie
 from jam.state.state import State, setup_state, set_state
-from jam.storage.db.kv import KVStore
-from jam.types.base import Bytes
+from rockstore import RockStore
 from jam.types.block import Block
-from jam.types.protocol.core import ServiceId
 
 TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-w-traces"
 
@@ -22,8 +22,8 @@ def fetch_vectors(module: str, pattern: str):
 
 def test_traces(module, pattern, db_path):
     db_path = db_path + '/kadjhfo'
-    db = KVStore(db_path)
-    post_db = KVStore(db_path + "/post")
+    db = RockStore(db_path)
+    post_db = RockStore(db_path + "/post")
     for name, vector in fetch_vectors(module, pattern):
         print(f"\n ⏭️Running test case {name} ...")
 
@@ -37,7 +37,7 @@ def test_traces(module, pattern, db_path):
 
         if len(vector["pre_state"]["keyvals"]) != 0:
             trie = StateTrie()
-            pre_data = {Bytes(keyval["key"]):Bytes(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}
+            pre_data = {Bytes.from_json(keyval["key"]):Bytes.from_json(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}
             trie.merkelize(pre_data, db)
             state = State(db, trie)
             set_state(state)
@@ -53,7 +53,7 @@ def test_traces(module, pattern, db_path):
         state.transition(block)
         from deepdiff import DeepDiff
 
-        post_data = {Bytes(keyval["key"]): Bytes(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
+        post_data = {Bytes.from_json(keyval["key"]): Bytes.from_json(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
         post_trie = StateTrie()
         post_trie.merkelize(post_data, post_db)
         post_state = State(post_db, post_trie)
@@ -75,13 +75,13 @@ def test_traces(module, pattern, db_path):
         expected = {bytes.fromhex(keyval["key"][2:]).hex(): bytes.fromhex(keyval["value"][2:]).hex() for keyval in vector["post_state"]["keyvals"]}
         value_diff = DeepDiff(actual, expected, significant_digits=0, verbose_level=2, view="tree")
         assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
-        assert str(state.root) == vector["post_state"]["state_root"]
+        assert state.root.hex() == vector["post_state"]["state_root"][2:]
         print("✅Passed")
 
 # def test_all_traces(modules, db_path):
 #     for name, vector in fetch_vectors(module, pattern):
 #         print(f"\n ⏭️Running test case {name} ...")
-#         db = KVStore(db_path)
+#         db = RockStore(db_path)
 #         block = Block.from_json(vector["block"])
 #
 #         gen_path = Path(__file__).parent / "genesis.json"

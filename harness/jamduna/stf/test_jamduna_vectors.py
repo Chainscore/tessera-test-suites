@@ -5,7 +5,7 @@ from jam.config.logging import logger
 from jam.state.ghost import GhostState
 from jam.state.merkle import StateTrie
 from jam.state.state import State, setup_state, set_state
-from jam.storage.db.kv import KVStore
+from rockstore import RockStore
 from jam.types.base import Bytes
 from jam.types.block import Block
 from jam.types.protocol.core import ServiceId
@@ -23,8 +23,8 @@ def fetch_vectors(module: str, pattern: str):
 
 def test_traces(module, pattern, db_path, spec):
     db_path = db_path + '/kadjhfo'
-    db = KVStore(db_path)
-    post_db = KVStore(db_path + "/post")
+    db = RockStore(db_path)
+    post_db = RockStore(db_path + "/post")
     for name, vector in fetch_vectors(module, pattern):
         print(f"\n ⏭️Running test case {name} ...")
         try:

@@ -15,7 +15,7 @@ from jam.types.state.pi import AllServiceStats
 from jam.types.state.sigma import Sigma
 from jam.types.state.tau import Tau
 from jam.types.state.xi import Xi
-from jam.types.work.report import WorkReports
+from jam.types.work import WorkReports
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):

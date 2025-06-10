@@ -1,43 +1,30 @@
-from dataclasses import dataclass
+from tsrkit_types import structure, Uint, Dictionary, Bytes
 
-from jam.types.base import U64, U32, Dictionary, decodable_dictionary, Bytes, Int
 from jam.types.protocol.core import Gas, ServiceId
 from jam.types.protocol.crypto import OpaqueHash, Hash
 from jam.types.state.delta import AccountPreimages, AccountStorage as AS, Delta, AccountData as AD, AccountPreimages, \
 	AccountMetadata, AccountLookup
-from jam.utils.codec import Codable
-from jam.utils.codec.decorators import decodable_dataclass
-from jam.utils.json import JsonSerde
 
-@decodable_dataclass
-@dataclass
-class Service(Codable,JsonSerde):
+@structure
+class Service:
     code_hash: OpaqueHash
-    balance: U64
+    balance: Uint[64]
     min_item_gas: Gas
     min_memo_gas: Gas
-    bytes: U64
-    items: U32
+    bytes: Uint[64]
+    items: Uint[32]
 
-@decodable_dictionary(Bytes, Bytes, key_name="key", value_name="value")
-class AccountStorage(Dictionary[Bytes, Bytes]):
+class AccountStorage(Dictionary[Bytes, Bytes, "key", "value"]):
     """Storage dictionary"""
     ...
 
-# @decodable_dictionary(ServiceId, Service, key_name="id", value_name="data")
-# class AccountMetas(Dictionary):
-#     def to_delta(self) -> Delta:
-#   		delta = Delta({})
-
-@decodable_dataclass
-@dataclass
-class AccountData(Codable, JsonSerde):
+@structure
+class AccountData:
 		service: Service
 		preimages: AccountPreimages
 		storage: AccountStorage
 
-@decodable_dictionary(ServiceId, AccountData, key_name="id", value_name="data")
-class InputAccounts(Dictionary):
+class InputAccounts(Dictionary[ServiceId, AccountData, "id", "data"]):
 		def to_delta(self) -> Delta:
 				delta = Delta({})
 				for key, val in self.items():
@@ -57,6 +44,5 @@ class InputAccounts(Dictionary):
 				return delta
 
 
-@decodable_dictionary(ServiceId,tuple[Gas,U32])
-class Stats(Dictionary[ServiceId,tuple[Gas,U32]]):
+class Stats(Dictionary[ServiceId,tuple[Gas,Uint[32]]]):
     ...
