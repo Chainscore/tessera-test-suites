@@ -1,0 +1,8 @@
+{
+    "name": "hello", 
+    "service_id": "4800c2b9",
+    "bytecode_file": "builds/hello-service.jam",
+    "deployed_at": "2025-06-11T13:41:42+05:30",
+    "gas_limit": 10000000,
+    "log_file": "logs/deployments/hello-20250611-134124.log"
+}

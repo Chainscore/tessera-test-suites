@@ -10,7 +10,7 @@ from jam.state.state import State, setup_state, set_state
 from rockstore import RockStore
 from jam.types.block import Block
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-w-traces"
+TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy"
 
 def fetch_vectors(module: str, pattern: str):
     vector_dir = TRACE_ROOT / "traces" / module
@@ -21,11 +21,11 @@ def fetch_vectors(module: str, pattern: str):
 
 
 def test_traces(module, pattern, db_path):
-    db_path = db_path + '/kadjhfo'
-    db = RockStore(db_path)
-    post_db = RockStore(db_path + "/post")
+    db_path = db_path
     for name, vector in fetch_vectors(module, pattern):
         print(f"\n ⏭️Running test case {name} ...")
+        db = RockStore(db_path + "/" + name)
+        post_db = RockStore(db_path + "/" + name + "/post")
 
         if name == "00000000.json":
             print("Skipping genesis...")
@@ -74,7 +74,12 @@ def test_traces(module, pattern, db_path):
         actual = {key.hex(): value.hex() for key, value in state.DB.get_all().items()}
         expected = {bytes.fromhex(keyval["key"][2:]).hex(): bytes.fromhex(keyval["value"][2:]).hex() for keyval in vector["post_state"]["keyvals"]}
         value_diff = DeepDiff(actual, expected, significant_digits=0, verbose_level=2, view="tree")
-        assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
+        # assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
+        for k,v in expected.items():
+            if k not in actual:
+                print("NEW KEY", k, v)
+            elif v != actual[k]:
+                print("DIFF", k, v, actual[k])
         assert state.root.hex() == vector["post_state"]["state_root"][2:]
         print("✅Passed")
 

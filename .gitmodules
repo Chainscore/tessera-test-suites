@@ -14,3 +14,7 @@
 	path = ext/arkpar-trie
 	url = https://github.com/arkpar/jamtestvectors.git
 	branch = arkpar/trie
+[submodule "ext/w3f-davxy"]
+	path = ext/w3f-davxy
+	url = https://github.com/davxy/jam-test-vectors
+	branch = master

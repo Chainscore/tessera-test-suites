@@ -1,0 +1,8 @@
+{
+    "name": "counter", 
+    "service_id": "0bf4b201",
+    "bytecode_file": "builds/counter-service.jam",
+    "deployed_at": "2025-06-11T13:41:24+05:30",
+    "gas_limit": 10000000,
+    "log_file": "logs/deployments/counter-20250611-134109.log"
+}
