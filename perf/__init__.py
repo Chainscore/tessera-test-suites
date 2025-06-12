@@ -17,14 +17,6 @@ from .tools import (
     compare_profiles,
     view_profile,
     list_profiles,
-    BenchmarkSuite,
-    BenchmarkResult,
-    time_function,
-    profile_and_time,
-    compare_execution_times,
-    load_test_vector,
-    create_performance_baseline,
-    check_performance_regression
 )
 
 __all__ = [
@@ -36,12 +28,4 @@ __all__ = [
     'compare_profiles',
     'view_profile',
     'list_profiles',
-    'BenchmarkSuite',
-    'BenchmarkResult',
-    'time_function',
-    'profile_and_time',
-    'compare_execution_times',
-    'load_test_vector',
-    'create_performance_baseline',
-    'check_performance_regression'
 ] 
