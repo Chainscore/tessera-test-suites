@@ -1,0 +1,42 @@
+Profiling Report: transition_w_pvm
+Date: 2025-06-13
+==================================================
+
+         3486815 function calls (3482655 primitive calls) in 1.285 seconds
+
+   Ordered by: cumulative time
+   List reduced from 1247 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    1.286    1.286 /Users/prasad/projects/tessera/tsr-py/jam/state/state.py:88(transition)
+        1    0.000    0.000    1.193    1.193 /Users/prasad/projects/tessera/tsr-py/jam/accumulation/accumulation.py:395(transition)
+      2/1    0.000    0.000    1.174    1.174 /Users/prasad/projects/tessera/tsr-py/jam/accumulation/accumulation.py:158(seq_accumulation)
+        1    0.000    0.000    1.174    1.174 /Users/prasad/projects/tessera/tsr-py/jam/accumulation/accumulation.py:226(parallel_accumulation)
+        1    0.000    0.000    1.174    1.174 /Users/prasad/projects/tessera/tsr-py/jam/accumulation/accumulation.py:291(single_accumulation)
+        1    0.001    0.001    1.174    1.174 /Users/prasad/projects/tessera/tsr-py/jam/execution/host_calls/invocations/accumulate.py:63(execute)
+        1    0.000    0.000    1.171    1.171 /Users/prasad/projects/tessera/tsr-py/jam/execution/host_calls/invocations/arg_invoke.py:18(execute)
+     36/1    0.000    0.000    1.045    1.045 /Users/prasad/projects/tessera/tsr-py/jam/execution/host_calls/host_call.py:14(execute)
+       36    0.043    0.001    0.802    0.022 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/pvm.py:15(execute)
+    78934    0.059    0.000    0.748    0.000 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/instructions/inst_map.py:76(execute_instruction)
+       41    0.000    0.000    0.276    0.007 /Users/prasad/projects/tessera/tsr-py/jam/state/merkle/merkle.py:123(update)
+   867/41    0.003    0.000    0.268    0.007 /Users/prasad/projects/tessera/tsr-py/jam/state/merkle/merkle.py:132(_reconstruct_root)
+       35    0.000    0.000    0.243    0.007 /Users/prasad/projects/tessera/tsr-py/jam/execution/host_calls/invocations/protocol.py:29(dispatch)
+       35    0.000    0.000    0.241    0.007 /Users/prasad/projects/tessera/tsr-py/jam/execution/host_calls/invocations/functions/protocol.py:19(execute)
+     3724    0.152    0.000    0.171    0.000 /opt/anaconda3/envs/Bandersnatch/lib/python3.12/site-packages/tsrkit_types/bytes_common.py:39(to_bits)
+    44786    0.042    0.000    0.159    0.000 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/instructions/tables/ii_reg_i_imm.py:22(vx)
+        7    0.000    0.000    0.152    0.022 /Users/prasad/projects/tessera/tsr-py/jam/execution/host_calls/invocations/functions/general_fns.py:323(write)
+        7    0.000    0.000    0.151    0.022 /Users/prasad/projects/tessera/tsr-py/jam/state/accounts.py:164(__setitem__)
+      875    0.003    0.000    0.139    0.000 /Users/prasad/projects/tessera/tsr-py/jam/state/merkle/utils.py:20(encode_branch)
+    15623    0.019    0.000    0.132    0.000 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/instructions/tables/ii_reg_i_imm.py:219(load_ind_impl)
+     1663    0.024    0.000    0.117    0.000 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/instructions/tables/ii_reg_i_imm.py:83(op_imm_impl)
+       63    0.000    0.000    0.112    0.002 /opt/anaconda3/envs/Bandersnatch/lib/python3.12/site-packages/tsrkit_types/itf/codable.py:60(decode)
+        1    0.002    0.002    0.111    0.111 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/program.py:167(decode_from)
+    12818    0.017    0.000    0.110    0.000 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/instructions/tables/ii_reg_i_imm.py:207(store_ind_impl)
+   199065    0.046    0.000    0.101    0.000 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/instructions/instruction_table.py:23(skip_index)
+    89572    0.029    0.000    0.095    0.000 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/instructions/tables/ii_reg_i_imm.py:18(lx)
+        7    0.000    0.000    0.084    0.012 /Users/prasad/projects/tessera/tsr-py/jam/state/accounts.py:227(__setitem__)
+      922    0.071    0.000    0.076    0.000 /opt/anaconda3/envs/Bandersnatch/lib/python3.12/site-packages/tsrkit_types/bytes_common.py:11(from_bits)
+    12870    0.011    0.000    0.072    0.000 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/instructions/tables/ii_reg_i_imm.py:153(add_imm_impl)
+     6397    0.012    0.000    0.066    0.000 /Users/prasad/projects/tessera/tsr-py/jam/execution/pvm/instructions/tables/i_reg_i_imm_i_offset.py:72(branch_u_imm_impl)
+
+

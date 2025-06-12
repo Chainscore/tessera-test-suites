@@ -1,6 +1,25 @@
 import shutil
 import tempfile
 import pytest
+import os
+import sys
+from pathlib import Path
+
+# Add tsr-py directory to path for imports if running from tessera-test-suites
+if 'tessera-test-suites' in os.getcwd():
+    tsr_py_path = Path(os.getcwd()).parent / 'tsr-py'
+    if tsr_py_path.exists() and str(tsr_py_path) not in sys.path:
+        sys.path.insert(0, str(tsr_py_path))
+
+# Set up logging environment variables if not already set
+if "LOG_LEVEL" not in os.environ:
+    os.environ["LOG_LEVEL"] = "error"
+    os.environ["LOG_LEVEL_IMPORT"] = "error"
+    os.environ["LOG_LEVEL_AUTHOR"] = "debug"
+    os.environ["LOG_LEVEL_NETWORK"] = "debug"
+    os.environ["LOG_LEVEL_PVM"] = "error"
+    os.environ["LOG_LEVEL_HOST_CALL"] = "debug"
+    os.environ["LOG_LEVEL_IN_CORE"] = "error"
 
 @pytest.fixture
 def db_path():
