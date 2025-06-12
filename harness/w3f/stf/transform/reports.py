@@ -15,9 +15,7 @@ from jam.types.state.psi import PsiO
 from jam.types.state.sigma import Sigma
 from jam.types.state.rho import Rho
 from jam.types.state.tau import Tau
-from jam.types.extrinsics.guarantees import (
-    GuaranteesExtrinsic,
-)
+from jam.types import GuaranteesExtrinsic
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):

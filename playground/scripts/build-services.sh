@@ -18,8 +18,8 @@ if ! command -v jam-pvm-build &> /dev/null; then
     exit 1
 fi
 
-# Services to build
-SERVICES=("hello" "counter")
+# Service to build
+SERVICE=$1
 
 # Create output directory
 mkdir -p "$PLAYGROUND_DIR/builds"
@@ -28,46 +28,44 @@ mkdir -p "$PLAYGROUND_DIR/builds"
 SUCCESSFUL_BUILDS=()
 FAILED_BUILDS=()
 
-echo "📦 Building services: ${SERVICES[*]}"
+echo "📦 Building service: ${ARGS[0]}"
 echo ""
 
-for service in "${SERVICES[@]}"; do
-    echo "🏗️  Building $service service..."
+echo "🏗️  Building $service service..."
+
+if [ ! -d "$SERVICE" ]; then
+    echo "⚠️  Service directory $service not found, skipping..."
+    FAILED_BUILDS+=("$service (not found)")
+    continue
+fi
+
+# Build the service
+cd "$service"
+
+if cargo build --release; then
+    echo "✅ Cargo build successful for $service"
     
-    if [ ! -d "$service" ]; then
-        echo "⚠️  Service directory $service not found, skipping..."
-        FAILED_BUILDS+=("$service (not found)")
-        continue
-    fi
-    
-    # Build the service
-    cd "$service"
-    
-    if cargo build --release; then
-        echo "✅ Cargo build successful for $service"
-        
-        # Build PVM bytecode
-        if jam-pvm-build --profile release --module service --output "../../builds/${service}-service.jam"; then
-            BYTECODE_FILE="../../builds/${service}-service.jam"
-            if [ -f "$BYTECODE_FILE" ]; then
-                echo "✅ PVM bytecode generated: $BYTECODE_FILE"
-                SUCCESSFUL_BUILDS+=("$service")
-            else
-                echo "❌ PVM bytecode not found for $service"
-                FAILED_BUILDS+=("$service (no bytecode)")
-            fi
+    # Build PVM bytecode
+    if jam-pvm-build --profile release --module service --output "../../builds/${service}-service.jam"; then
+        BYTECODE_FILE="../../builds/${service}-service.jam"
+        if [ -f "$BYTECODE_FILE" ]; then
+            echo "✅ PVM bytecode generated: $BYTECODE_FILE"
+            SUCCESSFUL_BUILDS+=("$service")
         else
-            echo "❌ PVM build failed for $service"
-            FAILED_BUILDS+=("$service (pvm build)")
+            echo "❌ PVM bytecode not found for $service"
+            FAILED_BUILDS+=("$service (no bytecode)")
         fi
     else
-        echo "❌ Cargo build failed for $service"
-        FAILED_BUILDS+=("$service (cargo)")
+        echo "❌ PVM build failed for $service"
+        FAILED_BUILDS+=("$service (pvm build)")
     fi
-    
-    cd ..
-    echo ""
-done
+else
+    echo "❌ Cargo build failed for $service"
+    FAILED_BUILDS+=("$service (cargo)")
+fi
+
+cd ..
+echo ""
 
 # Summary
 echo "📊 Build Summary:"

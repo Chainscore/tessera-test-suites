@@ -82,28 +82,3 @@ def test_traces(module, pattern, db_path):
                 print("DIFF", k, v, actual[k])
         assert state.root.hex() == vector["post_state"]["state_root"][2:]
         print("✅Passed")
-
-# def test_all_traces(modules, db_path):
-#     for name, vector in fetch_vectors(module, pattern):
-#         print(f"\n ⏭️Running test case {name} ...")
-#         db = RockStore(db_path)
-#         block = Block.from_json(vector["block"])
-#
-#         gen_path = Path(__file__).parent / "genesis.json"
-#         state = setup_state(GhostState.genesis(genesis_path=gen_path), db)
-#
-#         if len(vector["pre_state"]["keyvals"]) != 0:
-#             trie = StateTrie()
-#             pre_data = {Bytes(keyval["key"]):Bytes(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}
-#             trie.merkelize(pre_data, db)
-#             state = State(db, trie)
-#
-#         state.transition(block)
-#
-#         actual = {key.hex(): value.hex() for key, value in state.DB.get_all().items() if key[0] != 4}
-#         expected = {bytes.fromhex(keyval["key"][2:]).hex(): bytes.fromhex(keyval["value"][2:]).hex() for keyval in vector["post_state"]["keyvals"] if bytes.fromhex(keyval["key"][2:])[0] != 4}
-#         from deepdiff import DeepDiff
-#         value_diff = DeepDiff(actual, expected, significant_digits=0, verbose_level=2, view="tree")
-#         assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
-#         # assert str(state.root) == vector["post_state"]["state_root"]
-#         print("✅Passed w/o Gamma")

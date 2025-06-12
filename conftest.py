@@ -2,7 +2,6 @@ import shutil
 import tempfile
 import pytest
 
-
 @pytest.fixture
 def db_path():
     """Create a temporary directory for testing."""
