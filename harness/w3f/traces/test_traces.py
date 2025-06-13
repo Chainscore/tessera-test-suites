@@ -1,9 +1,10 @@
 import json
+import os
 from pathlib import Path
 
 from tsrkit_types import Bytes
 
-from jam.config.logging import logger
+from jam.config.logging import logger, setup_logging
 from jam.state.ghost import GhostState
 from jam.state.merkle import StateTrie
 from jam.state.state import State, setup_state, set_state
@@ -19,6 +20,9 @@ def fetch_vectors(module: str, pattern: str):
         for f in vector_dir.glob(pattern)
     ]
 
+os.environ["LOG_LEVEL_HOST_CALLS"] = "error"
+
+setup_logging(theme="default", environment="testing")
 
 def test_traces(module, pattern, db_path):
     db_path = db_path

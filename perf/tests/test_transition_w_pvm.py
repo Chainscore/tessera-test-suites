@@ -12,7 +12,7 @@ from jam.types.block import Block
 from rockstore import RockStore
 from jam.state.merkle import StateTrie
 from tsrkit_types import Bytes
-from jam.config.logging import setup_logging, get_logger
+from jam.config.logging import setup_logging
 
 from ..tools import Profiler
 
@@ -20,9 +20,7 @@ import dotenv
 
 dotenv.load_dotenv(".env")
 
-# Initialize logging with proper theme and environment
 setup_logging(theme="default", environment="testing")
-logger = get_logger("perf-tests")
 
 def test_transition_w_pvm(db_path):
     """Test PVM state transition with full PVM execution"""
@@ -44,8 +42,6 @@ def test_transition_w_pvm(db_path):
         print(f"✅ Processed block #{block.header.slot}")
             
     except ImportError as e:
-        logger.error(f"Could not import JAM modules: {e}")
         print(f"❌ Could not import JAM modules: {e}")
     except Exception as e:
-        logger.error(f"Test failed: {e}")
         print(f"❌ Test failed: {e}")

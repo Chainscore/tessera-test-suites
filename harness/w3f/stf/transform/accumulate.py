@@ -43,7 +43,7 @@ def transform_state(vector_state: dict) -> Sigma:
 
     state.nu = Nu.from_json(vector_state["ready_queue"])
     state.xi = Xi.from_json(vector_state["accumulated"])
-    setup_state(state, main_db)
+    setup_state(main_db, state)
     return state
 
 def subset_to_compare(state: Sigma) -> Tuple:
