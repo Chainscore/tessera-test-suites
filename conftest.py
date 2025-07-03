@@ -7,7 +7,7 @@ from pathlib import Path
 
 # Add tsr-py directory to path for imports if running from tessera-test-suites
 if 'tessera-test-suites' in os.getcwd():
-    tsr_py_path = Path(os.getcwd()).parent / 'tsr-py'
+    tsr_py_path = Path(os.getcwd()).parent / 'tessera'
     if tsr_py_path.exists() and str(tsr_py_path) not in sys.path:
         sys.path.insert(0, str(tsr_py_path))
 

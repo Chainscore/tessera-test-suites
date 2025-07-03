@@ -1,9 +1,8 @@
 from typing import Dict, Tuple
-
 from jam.consensus.safrole.safrole import Safrole
 from jam.state.ghost import GhostState
 from jam.types.block import Block
-from jam.types.extrinsics.tickets import TicketsExtrinsic
+from jam.types.block.extrinsics.tickets import TicketsExtrinsic
 from jam.types.protocol.crypto import OpaqueHash
 from jam.types.state.eta import Eta
 from jam.types.state.gamma import Gamma
@@ -19,7 +18,7 @@ def transform_block(vector_input: dict) -> (Block, Dict):
     block = Block.genesis()
     block.extrinsic.tickets = TicketsExtrinsic.from_json(vector_input["extrinsic"])
     block.header.slot = Tau(vector_input["slot"])
-    return block, {"entropy": OpaqueHash(vector_input["entropy"])}
+    return block, {"entropy": OpaqueHash.from_json(vector_input["entropy"])}
 
 
 def transform_state(vector_state: dict) -> Sigma:
@@ -48,7 +47,6 @@ def subset_to_compare(state: Sigma) -> Tuple:
         state.gamma,
         state.iota,
     )
-
 
 
 transition = Safrole.transition
