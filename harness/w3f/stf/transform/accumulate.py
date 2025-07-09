@@ -1,8 +1,11 @@
+import shutil
 from typing import Tuple, Dict
+
+from jam.settings import setup_setting
+from jam.types import Pi
 
 from harness.w3f.stf.types import InputAccounts
 from jam.accumulation.accumulation import Accumulation
-from jam.config.data_stores import main_db
 from jam.state.ghost import GhostState
 from jam.state.state import setup_state
 from jam.types.block import Block
@@ -43,7 +46,7 @@ def transform_state(vector_state: dict) -> Sigma:
 
     state.nu = Nu.from_json(vector_state["ready_queue"])
     state.xi = Xi.from_json(vector_state["accumulated"])
-    setup_state(main_db, state)
+     
     return state
 
 def subset_to_compare(state: Sigma) -> Tuple:
@@ -52,7 +55,11 @@ def subset_to_compare(state: Sigma) -> Tuple:
     (validator‐stats and slot in this example).
     """
     if isinstance(state, tuple):
+        state[0].tau = TimeSlot(0)
+        state[0].pi = TimeSlot(0)
         return state[0],
+    state.tau = TimeSlot(0)
+    state.pi = TimeSlot(0)
     return state,
 
 

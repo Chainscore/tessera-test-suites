@@ -13,12 +13,12 @@ if 'tessera-test-suites' in os.getcwd():
 
 # Set up logging environment variables if not already set
 if "LOG_LEVEL" not in os.environ:
-    os.environ["LOG_LEVEL"] = "error"
+    os.environ["LOG_LEVEL"] = "debug"
     os.environ["LOG_LEVEL_IMPORT"] = "error"
-    os.environ["LOG_LEVEL_AUTHOR"] = "debug"
-    os.environ["LOG_LEVEL_NETWORK"] = "debug"
+    os.environ["LOG_LEVEL_AUTHOR"] = "error"
+    os.environ["LOG_LEVEL_NETWORK"] = "error"
     os.environ["LOG_LEVEL_PVM"] = "error"
-    os.environ["LOG_LEVEL_HOST_CALL"] = "debug"
+    os.environ["LOG_LEVEL_HOST_CALLS"] = "debug"
     os.environ["LOG_LEVEL_IN_CORE"] = "error"
 
 @pytest.fixture

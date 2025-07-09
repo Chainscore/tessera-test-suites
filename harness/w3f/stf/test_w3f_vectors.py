@@ -2,9 +2,12 @@ import json
 import importlib
 from copy import deepcopy
 from pathlib import Path
+import shutil
 from jam.error import JamError
+from jam.settings import setup_setting
+from jam.state.state import setup_state
 
-STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
+STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f" / "stf"
 
 def fetch_vectors(module: str, spec: str, pattern: str):
     vector_dir = STF_ROOT / module / spec
@@ -23,11 +26,13 @@ def load_stf_module(module: str):
         mod.subset_to_compare,
     )
 
-def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_compare):
+def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_compare, settings):
+    
     # build inputs
     input_block, args   = tblock(vector["input"])
     pre_state           = tstate(vector["pre_state"])
-
+    
+    setup_state(settings.state_db, pre_state)
     try:
         # expected + actual post-states
         post_expect = tstate(vector["post_state"])
@@ -52,7 +57,9 @@ def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_comp
 def test_stf_vectors(module, spec, pattern):
     print("mod", module, spec, pattern)
     tblock, tstate, transition, compare_state = load_stf_module(module)
+    shutil.rmtree("data/tmp")
     for name, vector in fetch_vectors(module, spec, pattern):
         print(f"\n ⏭️ Running test case {name} ...")
-        run_case(name, vector, tblock, tstate, transition, compare_state)
+        settings = setup_setting(f"data/tmp/{name}/", 1) 
+        run_case(name, vector, tblock, tstate, transition, compare_state, settings)
         print("✅ Passed")

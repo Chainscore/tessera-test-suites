@@ -2,16 +2,18 @@ import json
 import os
 from pathlib import Path
 
+from jam.settings import setup_setting
+
 from tsrkit_types import Bytes
 
-from jam.config.logging import logger, setup_logging
+from jam.logging import logger, setup_logging
 from jam.state.ghost import GhostState
 from jam.state.merkle import StateTrie
-from jam.state.state import State, setup_state, set_state
+from jam.state.state import setup_state
 from rockstore import RockStore
 from jam.types.block import Block
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy"
+TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
 
 def fetch_vectors(module: str, pattern: str):
     vector_dir = TRACE_ROOT / "traces" / module
@@ -20,7 +22,7 @@ def fetch_vectors(module: str, pattern: str):
         for f in vector_dir.glob(pattern)
     ]
 
-os.environ["LOG_LEVEL_HOST_CALLS"] = "error"
+os.environ["LOG_LEVEL_HOST_CALLS"] = "debug"
 
 setup_logging(theme="default", environment="testing")
 
@@ -28,6 +30,8 @@ def test_traces(module, pattern, db_path):
     db_path = db_path
     for name, vector in fetch_vectors(module, pattern):
         print(f"\n ⏭️Running test case {name} ...")
+
+        settings = setup_setting(db_path + "/" + name + "/", 1)
         db = RockStore(db_path + "/" + name)
         post_db = RockStore(db_path + "/" + name + "/post")
 
@@ -40,11 +44,8 @@ def test_traces(module, pattern, db_path):
         gen_path = Path(__file__).parent / "genesis.json"
 
         if len(vector["pre_state"]["keyvals"]) != 0:
-            trie = StateTrie()
             pre_data = {Bytes.from_json(keyval["key"]):Bytes.from_json(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}
-            trie.merkelize(pre_data, db)
-            state = State(db, trie)
-            set_state(state)
+            state = setup_state(db, pre_data)
         else:
             state = setup_state(GhostState.genesis(genesis_path=gen_path), db)
 
@@ -58,9 +59,7 @@ def test_traces(module, pattern, db_path):
         from deepdiff import DeepDiff
 
         post_data = {Bytes.from_json(keyval["key"]): Bytes.from_json(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
-        post_trie = StateTrie()
-        post_trie.merkelize(post_data, post_db)
-        post_state = State(post_db, post_trie)
+        post_state = setup_state(post_db, post_data)
 
         if post_state.pi != state.pi:
             print("MISMATCHED PI")
@@ -75,7 +74,7 @@ def test_traces(module, pattern, db_path):
             print("DIFF", DeepDiff(state.beta.to_json(), post_state.beta.to_json(), significant_digits=0, verbose_level=2, view="tree"))
             print("PRE BETA", PRE_BETA)
 
-        actual = {key.hex(): value.hex() for key, value in state.DB.get_all().items()}
+        actual = {key.hex(): value.hex() for key, value in state.store._DB.get_all().items()}
         expected = {bytes.fromhex(keyval["key"][2:]).hex(): bytes.fromhex(keyval["value"][2:]).hex() for keyval in vector["post_state"]["keyvals"]}
         value_diff = DeepDiff(actual, expected, significant_digits=0, verbose_level=2, view="tree")
         # assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
