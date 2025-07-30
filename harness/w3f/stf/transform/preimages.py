@@ -1,12 +1,12 @@
 from typing import Dict, Tuple
 from jam.state.ghost import GhostState
-from jam.types.block import Block
+from jam.block.block import Block
 from jam.types.state.delta import Delta
-from jam.preimages.preimages import Preimages
+from jam.state.transitions import Preimages
 from jam.types.state.pi import AllServiceStats, Pi
 from jam.types.state.sigma import Sigma
 
-from jam.types.extrinsics.preimages import PreimagesExtrinsic
+from jam.block.extrinsics.preimages import PreimagesExtrinsic
 from jam.types.state.tau import Tau
 
 

@@ -5,10 +5,10 @@ from jam.settings import setup_setting
 from jam.types import Pi
 
 from harness.w3f.stf.types import InputAccounts
-from jam.accumulation.accumulation import Accumulation
+from jam.state.transitions import Accumulation
 from jam.state.ghost import GhostState
 from jam.state.state import setup_state
-from jam.types.block import Block
+from jam.block.block import Block
 from jam.types.protocol.core import TimeSlot
 from jam.types.state.chi import Chi
 from jam.types.state.delta import Delta

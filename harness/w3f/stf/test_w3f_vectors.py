@@ -36,7 +36,7 @@ def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_comp
     try:
         # expected + actual post-states
         post_expect = tstate(vector["post_state"])
-        post_actual = transition(tstate(vector["pre_state"]), input_block, **args)
+        post_actual = transition(tstate(vector["pre_state"]), tstate(vector["pre_state"]), input_block, **args)
 
         if vector["output"]:
             assert vector["output"].get("err") is None

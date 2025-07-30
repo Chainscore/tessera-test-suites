@@ -25,7 +25,11 @@ impl Service for HelloService {
         _context: RefineContext,
         _auth_code_hash: CodeHash,
     ) -> WorkOutput {
-        b"Hello from JAM!".to_vec().into()
+        let input_data: Vec<u8> = _payload.take();
+        let mut message = b"Hello, ".to_vec();
+        message.extend(input_data);
+        message.extend_from_slice(b"! Welcome to JAM!");
+        message.into()
     }
     
     /// Accumulate function - no-op

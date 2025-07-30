@@ -1,7 +1,7 @@
 from typing import Dict, Tuple
-from jam.report.reporting import Reporting
+from jam.state.transitions import Reporting
 from jam.state.ghost import GhostState
-from jam.types.block import Block
+from jam.block.block import Block
 from jam.types.protocol.crypto import OpaqueHash, Hash
 from jam.types.protocol.core import TimeSlot
 from jam.types.state.alpha import Alpha
@@ -15,7 +15,7 @@ from jam.types.state.psi import PsiO
 from jam.types.state.sigma import Sigma
 from jam.types.state.rho import Rho
 from jam.types.state.tau import Tau
-from jam.types import GuaranteesExtrinsic
+from jam.block.extrinsics import GuaranteesExtrinsic
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):

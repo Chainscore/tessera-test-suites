@@ -1,8 +1,8 @@
 from typing import Dict, Tuple
 from jam.state.ghost import GhostState
-from jam.types.block import Block
-from jam.types.extrinsics.assurances import AssurancesExtrinsic
-from jam.assurances.assurances import Assurances
+from jam.block.block import Block
+from jam.block.extrinsics.assurances import AssurancesExtrinsic
+from jam.state.transitions import Assurances
 from jam.types.protocol.crypto import HeaderHash
 from jam.types.state.kappa import Kappa
 from jam.types.state.rho import Rho
@@ -13,7 +13,7 @@ from jam.types.state.tau import Tau
 def transform_block(vector_input: dict) -> (Block, Dict):
     block = Block.genesis()
     block.header.slot = Tau(vector_input["slot"])
-    block.header.parent = HeaderHash(vector_input["parent"])
+    block.header.parent = HeaderHash.from_json(vector_input["parent"])
     block.extrinsic.assurances = AssurancesExtrinsic.from_json(vector_input["assurances"])
     return block, {}
 
@@ -31,6 +31,6 @@ def subset_to_compare(state) -> Tuple:
     """
     return state,
 
-def transition(state, block):
-    _, new_wrs = Assurances.transition(state, block)
+def transition(pre_state, state, block):
+    _, new_wrs = Assurances.transition(pre_state, state, block)
     return state

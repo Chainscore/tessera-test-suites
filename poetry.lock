@@ -1341,15 +1341,13 @@ test = ["enum34 ; python_version <= \"3.4\"", "ipaddress ; python_version < \"3.
 
 [[package]]
 name = "py-ark-vrf"
-version = "0.1.3"
+version = "0.2.0"
 description = "Python bindings for ark-vrf"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "py_ark_vrf-0.1.3-cp312-cp312-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:39e44ab10430efc0f3b6aadf470b5b4ed15fe11efc3d5fc2a80821abd72814bc"},
-    {file = "py_ark_vrf-0.1.3-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:f80401abc5b1f817499d1e4095f28b1dbf42f26061060d6af293d188c3fafd78"},
-    {file = "py_ark_vrf-0.1.3.tar.gz", hash = "sha256:a36e4afcbec88956b9488fe4fa1c719cd69bf6d3a69fa671ddcf339283512f9b"},
+    {file = "py_ark_vrf-0.2.0-cp313-cp313-manylinux_2_34_x86_64.whl", hash = "sha256:d71c151702783c692d53615eb968fac2213490ad14d1ad8a0fcdd2f6f6ca133b"},
 ]
 
 [[package]]
@@ -2040,7 +2038,7 @@ asyncio = "^3.4.3"
 cryptography = "45.0.2"
 dot_ring = {path = "../dot-ring", develop = true}
 numpy = "2.2.3"
-py-ark-vrf = "0.1.3"
+py-ark-vrf = "0.2.0"
 py-ecc = "^8.0.0"
 pycryptodome = "^3.21.0"
 pytest = "^8.3.5"
@@ -2051,11 +2049,11 @@ reed-solomon-leopard = "^0.2.1"
 rockstore = "^0.1.2"
 structlog = "^25.2.0"
 sympy = "1.13.1"
-tsrkit-types = "^0.1.3"
+tsrkit-types = "^0.1.8"
 
 [package.source]
 type = "directory"
-url = "../tessera"
+url = "../tsr-py"
 
 [[package]]
 name = "toolz"
@@ -2072,14 +2070,13 @@ files = [
 
 [[package]]
 name = "tsrkit-types"
-version = "0.1.4"
+version = "0.1.8"
 description = "Performant Python Typings library for type-safe binary serialization, JSON encoding, and data validation with zero dependencies"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "tsrkit_types-0.1.4-py3-none-any.whl", hash = "sha256:706ddec28e40df44b7f129bf5d78adaa3217bb41b016d7de110d41bb71c96f37"},
-    {file = "tsrkit_types-0.1.4.tar.gz", hash = "sha256:99d38c2bba9f15b875299cf3cacda640ceaafee8b48b6df9e32cb311cf05f7f4"},
+    {file = "tsrkit_types-0.1.8-py3-none-any.whl", hash = "sha256:5cf4f86aba2a356ec354e7a47b8504e1efe921ca793e904094cb42cb07cd57ee"},
 ]
 
 [package.extras]
@@ -2148,4 +2145,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "8a97416c972098c178559ffa053e5ecd34952f538079f2445d6ac18b7fc7c5c9"
+content-hash = "3162ecafe50a642e1b2d836b643e931c583db0c71817c89df83e92d8bc1b43df"

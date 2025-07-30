@@ -3,37 +3,27 @@ from jam.state.ghost import GhostState
 from jam.types.protocol.core import ValidatorIndex
 from jam.types.state.kappa import Kappa
 from jam.types.work import WorkReports
-from jam.utils.constants import CORE_COUNT
-from jam.types.block import Block
-
+from jam.block.block import Block
 from jam.types.state.pi import (
     AllCoreStats,
     AllServiceStats,
     AllValidatorStats,
-    CoreStat,
     Pi,
 )
 from jam.types.state.tau import Tau
-from jam.statistics.statistics import Statistics
-
+from jam.state.transitions import Statistics
 from jam.types.state.sigma import Sigma
-
-from jam.types.extrinsics.preimages import PreimagesExtrinsic
-
-from jam.types.extrinsics.assurances import AssurancesExtrinsic
-
-from jam.types.extrinsics.tickets import (
+from jam.block.extrinsics.preimages import PreimagesExtrinsic
+from jam.block.extrinsics.assurances import AssurancesExtrinsic
+from jam.block.extrinsics.tickets import (
     TicketsExtrinsic,
 )
-
-from jam.types.extrinsics.disputes import (
+from jam.block.extrinsics.disputes import (
     DisputesExtrinsic,
 )
-
-from jam.types.extrinsics.guarantees import (
+from jam.block.extrinsics.guarantees import (
     GuaranteesExtrinsic,
 )
-from tsrkit_types import U32
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):
@@ -41,7 +31,7 @@ def transform_block(vector_input: dict) -> (Block, Dict):
     block.header.slot = Tau(vector_input["slot"])
     block.header.author_index = ValidatorIndex(vector_input["author_index"])
     block.extrinsic.tickets = TicketsExtrinsic.from_json(
-        vector_input["extrinsic"]["ticket.py"]
+        vector_input["extrinsic"]["tickets"]
     )
     block.extrinsic.preimages = PreimagesExtrinsic.from_json(
         vector_input["extrinsic"]["preimages"]

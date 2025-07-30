@@ -7,11 +7,8 @@ from jam.types import Gamma
 from tsrkit_types import Bytes
 
 from jam.logging import logger, setup_logging
-from jam.state.ghost import GhostState
-from jam.state.merkle import StateTrie
 from jam.state.state import State, setup_state, set_state
-from rockstore import RockStore
-from jam.types.block import Block
+from jam.block.block import Block
 
 TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
 
@@ -41,11 +38,12 @@ def test_traces(module, pattern, db_path):
         except IndexError as e:
             print("Finished!")
             break 
+
         if block_n == 1:
             pre_data = {Bytes.from_json(keyval["key"]):Bytes.from_json(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}
             state = setup_state(settings.state_db, pre_data)
-        else:
-            assert state.root.hex() == vector["pre_state"]["state_root"][2:]
+        
+        assert state.root.hex() == vector["pre_state"]["state_root"][2:]
         block = Block.from_json(vector["block"])
 
         pre_gamma = state.gamma

@@ -1,8 +1,8 @@
 from typing import Dict, Tuple
-from jam.consensus.safrole.safrole import Safrole
+from jam.state.transitions import Safrole
 from jam.state.ghost import GhostState
-from jam.types.block import Block
-from jam.types.block.extrinsics.tickets import TicketsExtrinsic
+from jam.block.block import Block
+from jam.block.extrinsics.tickets import TicketsExtrinsic
 from jam.types.protocol.crypto import OpaqueHash
 from jam.types.state.eta import Eta
 from jam.types.state.gamma import Gamma

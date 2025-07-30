@@ -1,7 +1,8 @@
 from typing import Dict, Tuple
-from jam.authorization.authorization import Authorization
+from jam.state.transitions import Authorization
+
 from jam.state.ghost import GhostState
-from jam.types.extrinsics.guarantees import (
+from jam.block.extrinsics.guarantees import (
     GuaranteesExtrinsic,
     ReportGuarantee,
     ValidatorSignatures,
@@ -10,7 +11,7 @@ from jam.types.state.phi import Phi
 from jam.types.state.alpha import Alpha
 from jam.types.protocol.core import CoreIndex, OpaqueHash
 
-from jam.types.block import Block
+from jam.block.block import Block
 from jam.types.state.sigma import Sigma
 from jam.types.state.tau import Tau
 from jam.types.work import WorkReport

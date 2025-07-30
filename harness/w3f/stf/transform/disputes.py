@@ -1,14 +1,13 @@
 from typing import List, Tuple, Dict
 
 
-from jam.consensus.safrole.errors import SafroleError, SafroleErrorCode
-from jam.disputes.disputes import Disputes
+from jam.state.transitions import Disputes
 from jam.state.ghost import GhostState
 
 # from jam.state.state import GhostState, State
 # from jam.types import Boolean
 from jam.types.state.rho import Rho
-from jam.types.block import Block
+from jam.block.block import Block
 
 # from tests.unit.disputes.types import (
 #     Input,
@@ -23,7 +22,7 @@ from jam.types.state.sigma import Sigma
 from jam.types.state.tau import Tau
 from jam.types.state.lambda_ import Lambda_
 
-from jam.types.extrinsics.disputes import (
+from jam.block.extrinsics.disputes import (
     Culprit,
     Culprits,
     DisputesExtrinsic,
