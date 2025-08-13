@@ -1,5 +1,5 @@
 //! Hello Service - Ultra Minimal Version
-//! 
+//!
 //! The simplest possible JAM service that just returns empty responses.
 
 #![cfg_attr(any(target_arch = "riscv32", target_arch = "riscv64"), no_std)]
@@ -31,21 +31,11 @@ impl Service for HelloService {
         message.extend_from_slice(b"! Welcome to JAM!");
         message.into()
     }
-    
     /// Accumulate function - no-op
-    fn accumulate(
-        _slot: Slot,
-        _id: ServiceId,
-        _items: Vec<AccumulateItem>
-    ) -> Option<Hash> {
+    fn accumulate(_slot: Slot, _id: ServiceId, _items: Vec<AccumulateItem>) -> Option<Hash> {
         None
     }
-    
+
     /// Transfer function - no-op
-    fn on_transfer(
-        _slot: Slot,
-        _id: ServiceId,
-        _items: Vec<TransferRecord>
-    ) {
-    }
-} 
+    fn on_transfer(_slot: Slot, _id: ServiceId, _items: Vec<TransferRecord>) {}
+}

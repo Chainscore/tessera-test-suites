@@ -1,0 +1,8 @@
+{
+  "name": "poke",
+  "service_id": "00000000",
+  "bytecode_file": "builds/poke-service.jam",
+  "deployed_at": null,
+  "gas_limit": 10000000,
+  "log_file": "logs/deployments/poke-00000000.log"
+}

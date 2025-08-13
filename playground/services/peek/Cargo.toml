@@ -1,0 +1,29 @@
+[package]
+name = "peek-service"
+version = "0.1.0"
+edition = "2021"
+authors.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Use workspace-pinned versions, and disable default (std) features
+jam-types = { workspace = true, default-features = false }
+jam-pvm-common = { workspace = true, default-features = false, features = [
+    "service",
+] }
+
+# Derive helpers for PolkaVM, no std
+polkavm-derive = { version = "0.24.0", default-features = false }
+
+[features]
+default = [] # keep no_std
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "z"
+panic = "abort"
+strip = "symbols"
