@@ -14,6 +14,19 @@ members = [
     "machineNzeroNvoid",
     "void",
     "create_service",
+    "get_storage",
+    "set_storage",
+    "checkpoint",
+    "get",
+    "set",
+    "get_1",
+    "foreign_lookup",
+    "foreign_lookup_into",
+    "is_foreign_available",
+    "lookup",
+    "lookup_into",
+    "peek_value",
+    "peek_into",
 ]
 
 resolver = "2"

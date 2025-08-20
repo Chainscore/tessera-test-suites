@@ -1,0 +1,15 @@
+[package]
+name = "set-service"
+version = "0.1.0"
+edition = "2021"
+authors.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+jam-types.workspace = true
+jam-pvm-common.workspace = true
+polkavm-derive = { version = "0.24.0", default-features = false }
+# types.workspace = true
