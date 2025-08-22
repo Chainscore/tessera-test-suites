@@ -1,10 +1,10 @@
 #![no_std]
 extern crate alloc;
 
-use alloc::vec::Vec;
+// use alloc::vec::Vec;
 use jam_pvm_common::{
     accumulate::{set, set_storage},
-    declare_service, Service,
+    declare_service, ApiError, Service,
 };
 use jam_types::*;
 
@@ -39,18 +39,26 @@ impl Service for SetService {
             if let Ok(bytes) = it.result {
                 // payload = [k_len:u64][v_len:u64][k_bytes][v_bytes]
                 if bytes.len() < 16 {
-                    let _ = set_storage(it.package.as_slice(), b"ERR:payload_too_small");
+                    let _ = set_storage(
+                        it.package.as_slice(),
+                        b"ERR:payload_too_small" as &'static [u8],
+                    );
                     continue;
                 }
+
                 let k_len = le_u64(&bytes[0..8]) as usize;
                 let v_len = le_u64(&bytes[8..16]) as usize;
                 let need = 16 + k_len + v_len;
                 if bytes.len() < need {
-                    let _ = set_storage(it.package.as_slice(), b"ERR:payload_truncated");
+                    let _ = set_storage(
+                        it.package.as_slice(),
+                        b"ERR:payload_truncated" as &'static [u8],
+                    );
                     continue;
                 }
+
                 let key = bytes[16..16 + k_len].to_vec();
-                let val = bytes[16 + k_len..16 + k_len + v_len].to_vec();
+                let val = bytes[16 + k_len..need].to_vec();
 
                 match set(key, val.clone()) {
                     Ok(()) => {
@@ -58,8 +66,8 @@ impl Service for SetService {
                         let _ = set_storage(it.package.as_slice(), &val);
                     }
                     Err(e) => {
-                        // Persist short error “signature”.
-                        let tag = match e {
+                        // Force a single supertype for the match arms: &'static [u8]
+                        let tag: &'static [u8] = match e {
                             ApiError::OutOfBounds => b"ERR:OutOfBounds",
                             ApiError::IndexUnknown => b"ERR:IndexUnknown",
                             ApiError::StorageFull => b"ERR:StorageFull",
@@ -67,7 +75,6 @@ impl Service for SetService {
                             ApiError::NoCash => b"ERR:NoCash",
                             ApiError::GasLimitTooLow => b"ERR:GasLimitTooLow",
                             ApiError::ActionInvalid => b"ERR:ActionInvalid",
-                            // FIX: Add a catch-all for any other ApiError variants.
                             _ => b"ERR:Unknown",
                         };
                         let _ = set_storage(it.package.as_slice(), tag);

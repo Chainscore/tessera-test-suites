@@ -36,7 +36,7 @@ echo "🏗️  Building $SERVICE service..."
 if [ ! -d "$SERVICE" ]; then
     echo "⚠️  Service directory $SERVICE not found, skipping..."
     FAILED_BUILDS+=("$SERVICE (not found)")
-    continue
+    exit 1
 fi
 
 # Build the service
@@ -64,7 +64,7 @@ if [ ${#SUCCESSFUL_BUILDS[@]} -gt 0 ]; then
     echo "✅ Successful builds (${#SUCCESSFUL_BUILDS[@]}):"
     for service in "${SUCCESSFUL_BUILDS[@]}"; do
         echo "  - $service"
-        
+
         BYTECODE_PATH="$PLAYGROUND_DIR/builds/${service}-service.jam"
         if [ -f "$BYTECODE_PATH" ]; then
             SIZE=$(ls -lh "$BYTECODE_PATH" | awk '{print $5}')
@@ -103,4 +103,4 @@ if [ ${#FAILED_BUILDS[@]} -gt 0 ]; then
     exit 1
 fi
 
-echo "🎉 All services built successfully!" 
+echo "🎉 All services built successfully!"

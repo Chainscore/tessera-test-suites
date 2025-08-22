@@ -88,6 +88,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "create_service_storage-service"
+version = "0.1.0"
+dependencies = [
+ "jam-pvm-common",
+ "jam-types",
+ "polkavm-derive",
+]
+
+[[package]]
+name = "create_storage-service"
+version = "0.1.0"
+dependencies = [
+ "jam-pvm-common",
+ "jam-types",
+ "polkavm-derive",
+]
+
+[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -130,7 +148,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "get-service"
+name = "gas_probe-service"
 version = "0.1.0"
 dependencies = [
  "jam-pvm-common",
@@ -139,7 +157,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "get_1-service"
+name = "get-service"
 version = "0.1.0"
 dependencies = [
  "jam-pvm-common",
@@ -276,6 +294,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "lookup2-service"
+version = "0.1.0"
+dependencies = [
+ "jam-pvm-common",
+ "jam-types",
+ "polkavm-derive",
+]
+
+[[package]]
 name = "lookup_into-service"
 version = "0.1.0"
 dependencies = [
@@ -350,15 +377,6 @@ dependencies = [
 
 [[package]]
 name = "peek_into-service"
-version = "0.1.0"
-dependencies = [
- "jam-pvm-common",
- "jam-types",
- "polkavm-derive",
-]
-
-[[package]]
-name = "peek_value-service"
 version = "0.1.0"
 dependencies = [
  "jam-pvm-common",
@@ -517,6 +535,15 @@ name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
+
+[[package]]
+name = "update_storage-service"
+version = "0.1.0"
+dependencies = [
+ "jam-pvm-common",
+ "jam-types",
+ "polkavm-derive",
+]
 
 [[package]]
 name = "void-service"

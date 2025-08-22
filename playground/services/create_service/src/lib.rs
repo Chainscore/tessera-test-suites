@@ -1,12 +1,11 @@
 #![no_std]
 extern crate alloc;
-
 use alloc::format;
 use jam_pvm_common::{
     accumulate::{create_service, set_storage},
     declare_service, Service,
 };
-use jam_types::*; // ServiceId, WorkOutput, etc.
+use jam_types::*;
 
 pub struct CreateService;
 declare_service!(CreateService);
@@ -46,7 +45,7 @@ impl Service for CreateService {
                 // code_hash
                 let mut h = [0u8; 32];
                 h.copy_from_slice(&bytes[0..32]);
-                let code_hash: CodeHash = CodeHash::from(h); // <-- [u8;32] works
+                let code_hash = CodeHash::from(h);
 
                 // code_len
                 let code_len: usize = le_u64(&bytes[32..40]) as usize;
@@ -61,6 +60,19 @@ impl Service for CreateService {
                         let raw: u32 = new_id.into();
                         let ack = raw.to_le_bytes();
                         let _ = set_storage(b"/last_created", &ack);
+
+                        // Also store success status for debugging
+                        let _ = set_storage(b"/last_error", b"OK:Success");
+
+                        // Build commit hash with service creation details
+                        let mut msg = [0u8; 32];
+                        msg[0..4].copy_from_slice(b"CRTE");
+                        msg[4..8].copy_from_slice(&ack); // new service ID
+                        msg[8..16].copy_from_slice(&(code_len as u64).to_le_bytes());
+                        msg[16..24].copy_from_slice(&le_u64(&bytes[40..48]).to_le_bytes());
+                        msg[24..32].copy_from_slice(&le_u64(&bytes[48..56]).to_le_bytes());
+
+                        return Some(Hash::from(msg));
                     }
                     Err(e) => {
                         // persist short human-readable error

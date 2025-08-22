@@ -1,4 +1,5 @@
 
+from pathlib import Path
 from jam.state.state import setup_state
 from jam.settings import setup_setting
 from jam.utils.dummy.dummy_package import create_dummy_package
@@ -8,6 +9,7 @@ from jam.types.protocol.crypto import Hash
 from jam.types.state.delta import AccountMetadata, Ai, Ao, LookupTable, Timestamps
 from jam.types.work.item import WorkItem, ImportSpecs, ExtrinsicSpecs
 from jam.types.work import WorkExecResult
+import pytest
 from tsrkit_types.bytes import Bytes
 from tsrkit_types.enum import Uint
 
@@ -16,6 +18,16 @@ from jam.execution.host_calls.invocations.accumulate import PsiA  # your PsiA cl
 from jam.types.state.accumulation.types import StateContext, OperandTuples
 
 def _artifact(name: str) -> Path:
+    p = (
+        Path(__file__).parents[4]
+        / "tessera-test-suites"
+        / "playground"
+        / "builds"
+        / f"{name}-service.jam"
+    )
+    if not p.exists():
+        pytest.skip(f"Missing artifact: {p}")
+    return p
 
 def _register(state, sid: ServiceId, code: bytes):
     ch = Hash.blake2b(code)
@@ -41,7 +53,6 @@ def _read_from_statectx(u: StateContext, sid: ServiceId, key: bytes) -> bytes | 
     # The exact attribute to reach storage may differ in your tree; adapt if needed:
     storage = u.service_accounts[sid].storage
 
-])
 def test_checkpoint(db_path, mode, expect_a, expect_b):
     # --- state/setup ---
     settings = setup_setting("data/god_mode", 3000, 2**16 - 1, db_path)

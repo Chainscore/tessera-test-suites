@@ -17,36 +17,10 @@ name = "aioquic"
 version = "1.2.0"
 description = "An implementation of QUIC and HTTP/3"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["main"]
-files = [
-    {file = "aioquic-1.2.0-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:3e23964dfb04526ade6e66f5b7cd0c830421b8138303ab60ba6e204015e7cb0b"},
-    {file = "aioquic-1.2.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:84d733332927b76218a3b246216104116f766f5a9b2308ec306cd017b3049660"},
-    {file = "aioquic-1.2.0-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2466499759b31ea4f1d17f4aeb1f8d4297169e05e3c1216d618c9757f4dd740d"},
-    {file = "aioquic-1.2.0-cp38-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:cd75015462ca5070a888110dc201f35a9f4c7459f9201b77adc3c06013611bb8"},
-    {file = "aioquic-1.2.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:43ae3b11d43400a620ca0b4b4885d12b76a599c2cbddba755f74bebfa65fe587"},
-    {file = "aioquic-1.2.0-cp38-abi3-win32.whl", hash = "sha256:910d8c91da86bba003d491d15deaeac3087d1b9d690b9edc1375905d8867b742"},
-    {file = "aioquic-1.2.0-cp38-abi3-win_amd64.whl", hash = "sha256:e3dcfb941004333d477225a6689b55fc7f905af5ee6a556eb5083be0354e653a"},
-    {file = "aioquic-1.2.0-pp310-pypy310_pp73-macosx_10_15_x86_64.whl", hash = "sha256:8e600da7aa7e4a7bc53ee8f45fd66808032127ae00938c119ac77d66633b8961"},
-    {file = "aioquic-1.2.0-pp310-pypy310_pp73-macosx_11_0_arm64.whl", hash = "sha256:358e2b9c1e0c24b9933094c3c2cf990faf44d03b64d6f8ff79b4b3f510c6c268"},
-    {file = "aioquic-1.2.0-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6fe683943ea3439dd0aca05ff80e85a552d4b39f9f34858c76ac54c205990e88"},
-    {file = "aioquic-1.2.0-pp310-pypy310_pp73-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c22689c33fe4799624aed6faaba0af9e6ea7d31ac45047745828ee68d67fe1d9"},
-    {file = "aioquic-1.2.0-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3976b75e82d83742c8b811e38d273eda2ca7f81394b6a85da33a02849c5f1d9d"},
-    {file = "aioquic-1.2.0-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:cbe7167b2faee887e115d83d25332c4b8fa4604d5175807d978cb4fe39b4e36e"},
-    {file = "aioquic-1.2.0-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:f81e7946f09501a7c27e3f71b84a455e6bf92346fb5a28ef2d73c9d564463c63"},
-    {file = "aioquic-1.2.0-pp38-pypy38_pp73-macosx_11_0_arm64.whl", hash = "sha256:e2c3c127cc3d9eac7a6d05142036bf4b2c593d750a115a2fa42c1f86cbe8c0a0"},
-    {file = "aioquic-1.2.0-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bb917143e7a4de5beba1e695fa89f2b05ef080b450dea07338cc67a9c75e0a4d"},
-    {file = "aioquic-1.2.0-pp38-pypy38_pp73-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1de513772fd04ff38028fdf748a9e2dec33d7aa2fbf67fda3011d9a85b620c54"},
-    {file = "aioquic-1.2.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7dcc212bb529900757d8e99a76198b42c2a978ce735a1bfca394033c16cfc33c"},
-    {file = "aioquic-1.2.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:e7ce10198f8efa91986ad8ac83fa08e50972e0aacde45bdaf7b9365094e72c0c"},
-    {file = "aioquic-1.2.0-pp39-pypy39_pp73-macosx_10_15_x86_64.whl", hash = "sha256:6e418c92898a0af306e6f1b6a55a0d3d2597001c57a7b1ba36cf5b47bf41233b"},
-    {file = "aioquic-1.2.0-pp39-pypy39_pp73-macosx_11_0_arm64.whl", hash = "sha256:81650d59bef05c514af2cfdcb2946e9d13367b745e68b36881d43630ef563d38"},
-    {file = "aioquic-1.2.0-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6371c3afa1036294e1505fdbda8c147bc41c5b6709a47459e8c1b4eec41a86ef"},
-    {file = "aioquic-1.2.0-pp39-pypy39_pp73-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c332cffa3c2124e5db82b2b9eb2662bd7c39ee2247606b74de689f6d3091b61a"},
-    {file = "aioquic-1.2.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fcc1eb083ed9f8d903482e375281c8c26a5ed2b6bee5ee2be3f13275d8fdb146"},
-    {file = "aioquic-1.2.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:f209ad5edbff8239e994c189dc74428420957448a190f4343faee4caedef4eee"},
-    {file = "aioquic-1.2.0.tar.gz", hash = "sha256:f91263bb3f71948c5c8915b4d50ee370004f20a416f67fab3dcc90556c7e7199"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 certifi = "*"
@@ -56,7 +30,11 @@ pyopenssl = ">=24"
 service-identity = ">=24.1.0"
 
 [package.extras]
-dev = ["coverage[toml] (>=7.2.2)"]
+dev = ["coverage[toml] (>=7.2.2)", "typing_extensions"]
+
+[package.source]
+type = "directory"
+url = "../aioquic"
 
 [[package]]
 name = "annotated-types"
@@ -2134,7 +2112,7 @@ files = []
 develop = true
 
 [package.dependencies]
-aioquic = "^1.2.0"
+aioquic = {path = "../aioquic"}
 asyncio = "^3.4.3"
 cryptography = "45.0.2"
 dot_ring = {path = "../dot-ring", develop = true}
@@ -2150,6 +2128,8 @@ reed-solomon-leopard = "^0.2.1"
 rockstore = "^0.1.2"
 structlog = "^25.2.0"
 sympy = "1.13.1"
+tsrkit-asm = {path = "../tsrkit-asm"}
+tsrkit-pvm = {path = "../tsrkit-pvm"}
 tsrkit-types = "^0.1.8"
 
 [package.source]
@@ -2168,6 +2148,42 @@ files = [
     {file = "toolz-1.0.0-py3-none-any.whl", hash = "sha256:292c8f1c4e7516bf9086f8850935c799a874039c8bcf959d47b600e4c44a6236"},
     {file = "toolz-1.0.0.tar.gz", hash = "sha256:2c86e3d9a04798ac556793bced838816296a2f085017664e4995cb40a1047a02"},
 ]
+
+[[package]]
+name = "tsrkit-asm"
+version = "0.1.0"
+description = "Python bindings for PolkaVM assembler - Runtime x86-64 assembler"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "../tsrkit-asm"
+
+[[package]]
+name = "tsrkit-pvm"
+version = "0.1.0"
+description = "Polkadot Virtual Machine (PVM) implementation with interpreter and recompiler as specified in GP"
+optional = false
+python-versions = ">=3.11"
+groups = ["main"]
+files = []
+develop = false
+
+[package.dependencies]
+tsrkit-types = ">=0.1.0"
+
+[package.extras]
+dev = ["black (>=23.0.0)", "flake8 (>=6.0.0)", "isort (>=5.12.0)", "mypy (>=1.0.0)", "pre-commit (>=3.0.0)", "pytest (>=7.0.0)", "pytest-cov (>=4.0.0)"]
+docs = ["myst-parser (>=1.0.0)", "sphinx (>=6.0.0)", "sphinx-rtd-theme (>=1.2.0)"]
+test = ["pytest (>=7.0.0)", "pytest-benchmark (>=4.0.0)", "pytest-cov (>=4.0.0)"]
+
+[package.source]
+type = "directory"
+url = "../tsrkit-pvm"
 
 [[package]]
 name = "tsrkit-types"
@@ -2246,4 +2262,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "47064e7b2beceb2614cfb00954e356c3c1191854b6634f8da6aafa5efa5728f0"
+content-hash = "c1c85fb8a79621a9f5d357c6846bb62ed627d159cb5499a39096797ccc479995"

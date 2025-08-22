@@ -15,8 +15,6 @@ from jam.execution.host_calls.invocations.accumulate import PsiA
 from jam.types.state.accumulation.types import StateContext, OperandTuples
 
 
-def _artifact(name: str) -> Path:
-
 
 def _register(state, sid: ServiceId, code: bytes):
     ch = Hash.blake2b(code)

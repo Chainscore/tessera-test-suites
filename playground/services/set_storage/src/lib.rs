@@ -2,7 +2,10 @@
 extern crate alloc;
 
 use alloc::format;
-use jam_pvm_common::{accumulate::set_storage, declare_service, Service};
+use jam_pvm_common::{
+    accumulate::{get_storage, set_storage},
+    declare_service, Service,
+};
 use jam_types::*;
 
 pub struct SetStorage;
@@ -23,6 +26,7 @@ impl Service for SetStorage {
         _ctx: RefineContext,
         _auth: CodeHash,
     ) -> WorkOutput {
+        // pass-through
         payload.take().into()
     }
 
@@ -32,14 +36,14 @@ impl Service for SetStorage {
         items: alloc::vec::Vec<AccumulateItem>,
     ) -> Option<Hash> {
         if items.is_empty() {
-            // Fallback marker so tests can detect that accumulate actually ran
+            // marker so we can tell items were empty
             let _ = set_storage(b"/echo_set", b"EMPTY");
             return None;
         }
 
         for it in items {
             if let Ok(bytes) = it.result {
-                // payload = [k_len:u64][k_bytes][v_len:u64][v_bytes]
+                // [k_len:u64][k_bytes][v_len:u64][v_bytes]
                 if bytes.len() < 16 {
                     let _ = set_storage(b"/echo_set", b"ERR:bad_payload");
                     continue;
@@ -61,7 +65,11 @@ impl Service for SetStorage {
 
                 match set_storage(key, val) {
                     Ok(_) => {
+                        // success sentinel + echo
                         let _ = set_storage(b"/echo_set", b"OK");
+                        let _ = set_storage(b"/echo_get", val);
+                        // ack under package hash (exact 32 bytes)
+                        let _ = set_storage(it.package.as_slice(), b"OK");
                     }
                     Err(e) => {
                         let _ = set_storage(b"/echo_set", format!("ERR:{:?}", e).as_bytes());

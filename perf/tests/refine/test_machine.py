@@ -58,7 +58,7 @@ def test_machine_refine_then_zero(db_path: str):
     out1 = r1.encode()
     assert not out1.startswith(b"ERR:"), f"machine error: {out1!r}"
     (handle,) = struct.unpack("<Q", out1[:8])
-    # print("inner handle:", handle)
+    print("inner handle:", handle)
 
     # 2) Zero 1 page at page 0 on that inner VM
     payload_zero = struct.pack("<QQQ", handle, 0, 1)  # vm_handle, page, count

@@ -44,10 +44,7 @@ def _isegs_for(pkg):
 
 
 def _decode_bytes_result(work_output_bytes: bytes) -> bytes:
-    """
-    Some runners wrap results as [u16_be_len][payload]. If so, strip it.
-    Otherwise return as-is.
-    """
+    """If the result is [u16_be_len][payload], strip it, else return as-is."""
     if len(work_output_bytes) >= 2:
         n = int.from_bytes(work_output_bytes[:2], "big")
         if n == len(work_output_bytes) - 2:
@@ -55,119 +52,136 @@ def _decode_bytes_result(work_output_bytes: bytes) -> bytes:
     return work_output_bytes
 
 
-def test_peek_into_zero_memory(db_path):
-    # --- state & services ---
+def _make_create_and_peek_payload(pc0: int, code_bytes: bytes, inner_src: int, buf_len: int) -> bytes:
+    # layout: [pc0 u64][code_len u32][code][inner_src u64][buf_len u64]
+    return (
+        struct.pack("<Q", pc0) +
+        struct.pack("<I", len(code_bytes)) +
+        code_bytes +
+        struct.pack("<QQ", inner_src, buf_len)
+    )
+
+
+def test_peek_into_zero_memory_onecall(db_path):
+    # --- state & service ---
     settings = setup_setting("data/god_mode", 3000, 2**16 - 1, db_path)
     state = setup_state(settings.state_db, GhostState.genesis())
 
-    machine_code   = _artifact("machine").read_bytes()      # creates inner VM and returns handle
-    peek_into_code = _artifact("peek_into").read_bytes()    # service under test
-    inner_prog     = _artifact("zero").read_bytes()         # any valid .jam program
+    peek_into_code = _artifact("peek_into").read_bytes()    # the service under test
+    zero_prog      = _artifact("zero").read_bytes()         # a valid .jam program (contents don't matter)
+    svc_peek_into  = ServiceId(12)
 
-    svc_machine   = ServiceId(11)
-    svc_peek_into = ServiceId(12)
+    ch_peek = _register(state, svc_peek_into, peek_into_code)
 
-    ch_machine    = _register(state, svc_machine, machine_code)
-    ch_peek_into  = _register(state, svc_peek_into, peek_into_code)
+    # Create a VM and immediately peek 16 bytes at address 0 — should be zero-initialized
+    payload = _make_create_and_peek_payload(
+        pc0=0,
+        code_bytes=zero_prog,
+        inner_src=0,
+        buf_len=16,
+    )
 
-    # --- 1) create inner VM via MachineService: payload = [pc0 u64] + code_bytes
-    payload_create = struct.pack("<Q", 0) + inner_prog
     pkg = create_dummy_package()
-    wi_create = WorkItem(
-        service=svc_machine,
-        code_hash=ch_machine,
-        payload=TBytes(payload_create),
+    wi  = WorkItem(
+        service=svc_peek_into,
+        code_hash=ch_peek,
+        payload=TBytes(payload),
         refine_gas_limit=Gas(30_000),
         accumulate_gas_limit=Gas(30_000),
         import_segments=ImportSpecs([]),
         extrinsic=ExtrinsicSpecs([]),
         export_count=Uint[16](0),
     )
-    pkg.items.append(wi_create)
+    pkg.items.append(wi)
 
-    r1, e1, u1 = PsiR(0, p=pkg, auth_trace=b"", i_segments=_isegs_for(pkg), e_offset=0).execute()
-    assert r1.get_key() == "ok"
-    out1 = _decode_bytes_result(r1.encode())
-    assert len(out1) >= 8
-    (handle,) = struct.unpack("<Q", out1[:8])
-
-    # --- 2) peek 16 bytes from address 0 (new VM memory is zero-initialized)
-    buf_len   = 16
-    inner_src = 0
-    payload_peek = struct.pack("<QQQ", handle, buf_len, inner_src)
-
-    wi_peek = WorkItem(
-        service=svc_peek_into,
-        code_hash=ch_peek_into,
-        payload=TBytes(payload_peek),
-        refine_gas_limit=Gas(30_000),
-        accumulate_gas_limit=Gas(30_000),
-        import_segments=ImportSpecs([]),
-        extrinsic=ExtrinsicSpecs([]),
-        export_count=Uint,
-    )
-    pkg.items.append(wi_peek)
-
-    r2, e2, u2 = PsiR(1, p=pkg, auth_trace=b"", i_segments=_isegs_for(pkg), e_offset=0).execute()
-    assert r2.get_key() == "ok"
-    out2 = _decode_bytes_result(r2.encode())
-    assert out2 == b"\x00" * buf_len
+    r, e, u = PsiR(0, p=pkg, auth_trace=b"", i_segments=_isegs_for(pkg), e_offset=0).execute()
+    assert r.get_key() == "ok"
+    out = _decode_bytes_result(r.encode())
+    assert out == b"\x00" * 16
 
 
-def test_peek_into_small_lengths(db_path):
-    # --- state & services ---
+def test_peek_into_small_lengths_onecall(db_path):
+    # --- state & service ---
     settings = setup_setting("data/god_mode", 3000, 2**16 - 1, db_path)
     state = setup_state(settings.state_db, GhostState.genesis())
 
-    machine_code   = _artifact("machine").read_bytes()
     peek_into_code = _artifact("peek_into").read_bytes()
-    inner_prog     = _artifact("zero").read_bytes()
+    zero_prog      = _artifact("zero").read_bytes()
+    svc_peek_into  = ServiceId(22)
 
-    svc_machine   = ServiceId(21)
-    svc_peek_into = ServiceId(22)
+    ch_peek = _register(state, svc_peek_into, peek_into_code)
 
-    ch_machine    = _register(state, svc_machine, machine_code)
-    ch_peek_into  = _register(state, svc_peek_into, peek_into_code)
-
-    # Create the VM
-    payload_create = struct.pack("<Q", 0) + inner_prog
+    # Case A: buf_len = 0 → empty result
+    payload0 = _make_create_and_peek_payload(
+        pc0=0,
+        code_bytes=zero_prog,
+        inner_src=0,
+        buf_len=0,
+    )
     pkg = create_dummy_package()
     pkg.items.append(
         WorkItem(
-            service=svc_machine, code_hash=ch_machine, payload=TBytes(payload_create),
-            refine_gas_limit=Gas(30_000), accumulate_gas_limit=Gas(30_000),
-            import_segments=ImportSpecs([]), extrinsic=ExtrinsicSpecs([]),
+            service=svc_peek_into,
+            code_hash=ch_peek,
+            payload=TBytes(payload0),
+            refine_gas_limit=Gas(30_000),
+            accumulate_gas_limit=Gas(30_000),
+            import_segments=ImportSpecs([]),
+            extrinsic=ExtrinsicSpecs([]),
             export_count=Uint[16](0),
         )
     )
-    r1, e1, u1 = PsiR(0, p=pkg, auth_trace=b"", i_segments=_isegs_for(pkg), e_offset=0).execute()
-    assert r1.get_key() == "ok"
-    (handle,) = struct.unpack("<Q", _decode_bytes_result(r1.encode())[:8])
+    r0, e0, u0 = PsiR(0, p=pkg, auth_trace=b"", i_segments=_isegs_for(pkg), e_offset=0).execute()
+    assert r0.get_key() == "ok"
+    assert _decode_bytes_result(r0.encode()) == b""
 
-    # Peek 0 bytes → empty result
-    payload0 = struct.pack("<QQQ", handle, 0, 0)
-    pkg.items.append(
+    # Case B: buf_len = 5 at inner_src = 0 → five zeros
+    payload5 = _make_create_and_peek_payload(
+        pc0=0,
+        code_bytes=zero_prog,
+        inner_src=0,
+        buf_len=5,
+    )
+    pkg2 = create_dummy_package()
+    pkg2.items.append(
         WorkItem(
-            service=svc_peek_into, code_hash=ch_peek_into, payload=TBytes(payload0),
-            refine_gas_limit=Gas(30_000), accumulate_gas_limit=Gas(30_000),
-            import_segments=ImportSpecs([]), extrinsic=ExtrinsicSpecs([]),
+            service=svc_peek_into,
+            code_hash=ch_peek,
+            payload=TBytes(payload5),
+            refine_gas_limit=Gas(30_000),
+            accumulate_gas_limit=Gas(30_000),
+            import_segments=ImportSpecs([]),
+            extrinsic=ExtrinsicSpecs([]),
             export_count=Uint[16](0),
         )
     )
-    r2, e2, u2 = PsiR(1, p=pkg, auth_trace=b"", i_segments=_isegs_for(pkg), e_offset=0).execute()
-    assert r2.get_key() == "ok"
-    assert _decode_bytes_result(r2.encode()) == b""
+    r5, e5, u5 = PsiR(0, p=pkg2, auth_trace=b"", i_segments=_isegs_for(pkg2), e_offset=0).execute()
+    assert r5.get_key() == "ok"
+    assert _decode_bytes_result(r5.encode()) == b"\x00" * 5
 
-    # Peek 5 bytes → five zeros
-    payload5 = struct.pack("<QQQ", handle, 5, 0)
-    pkg.items.append(
+
+    # Case C: peek near the end of the first page (VM typically starts with 1 x 4KiB page)
+    # Keep the whole read in-bounds so peek_into succeeds.
+    inner_src = 4096 - 7  # last 7 bytes of page 0
+    payload_far = _make_create_and_peek_payload(
+        pc0=0,
+        code_bytes=zero_prog,
+        inner_src=inner_src,
+        buf_len=7,
+    )
+    pkg3 = create_dummy_package()
+    pkg3.items.append(
         WorkItem(
-            service=svc_peek_into, code_hash=ch_peek_into, payload=TBytes(payload5),
-            refine_gas_limit=Gas(30_000), accumulate_gas_limit=Gas(30_000),
-            import_segments=ImportSpecs([]), extrinsic=ExtrinsicSpecs([]),
+            service=svc_peek_into,
+            code_hash=ch_peek,
+            payload=TBytes(payload_far),
+            refine_gas_limit=Gas(30_000),
+            accumulate_gas_limit=Gas(30_000),
+            import_segments=ImportSpecs([]),
+            extrinsic=ExtrinsicSpecs([]),
             export_count=Uint[16](0),
         )
     )
-    r3, e3, u3 = PsiR(2, p=pkg, auth_trace=b"", i_segments=_isegs_for(pkg), e_offset=0).execute()
-    assert r3.get_key() == "ok"
-    assert _decode_bytes_result(r3.encode()) == b"\x00" * 5
+    r_far, e_far, u_far = PsiR(0, p=pkg3, auth_trace=b"", i_segments=_isegs_for(pkg3), e_offset=0).execute()
+    assert r_far.get_key() == "ok"
+    assert _decode_bytes_result(r_far.encode()) == b"\x00" * 7

@@ -1,5 +1,5 @@
 [package]
-name = "get_1-service"
+name = "create_service_storage-service"
 version = "0.1.0"
 edition = "2021"
 authors.workspace = true

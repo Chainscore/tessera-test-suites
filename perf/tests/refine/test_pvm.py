@@ -14,11 +14,11 @@ from jam.execution.host_calls.invocations.refine import PsiR
 
 
 def test_refine(db_path):
-    # service = "hello"
-    # payload = b"Prasad"
+    service = "hello"
+    payload = b"Prasad"
 
-    service = "gas"
-    payload = b"inc"
+    # service = "gas"
+    # payload = b"inc"
 
     settings = setup_setting("data/god_mode", 3000, 2**16 - 1, db_path)
     state = setup_state(settings.state_db, GhostState.genesis())
