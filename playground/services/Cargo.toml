@@ -8,6 +8,7 @@ members = [
     "gas",
     "gas_probe",
     "is_available",
+    "is_available_accu",
     "expunge",
     "machine",
     "machineNexpunge",
@@ -29,6 +30,7 @@ members = [
     "lookup2",
     "lookup_into",
     "peek_into",
+    "ejectt"
 ]
 
 resolver = "2"

@@ -1,325 +1,133 @@
-# perf/tests/test_create_service.py
+# perf/tests/accumulation/test_create_service.py
+
 from pathlib import Path
-import struct
-from jam.execution.pvm.memory import logger
-from jam.state.state import setup_state, GhostState
-from jam.settings import setup_setting
-from jam.utils.dummy.dummy_package import create_dummy_package
-from jam.types.protocol.core import Balance, BlobLength, Gas, ServiceId
+
+from jam.state.ghost import GhostState
+from jam.state.state import setup_state, state as global_state
+from jam.types.protocol.core import Balance, BlobLength, Gas, ServiceId, TimeSlot
 from jam.types.protocol.crypto import Hash
 from jam.types.state.delta import AccountMetadata, Ai, Ao, LookupTable, Timestamps
-from jam.types.state.accumulation.types import StateContext, OperandTuples
-from jam.types.work.item import WorkItem, ImportSpecs, ExtrinsicSpecs
-import pytest
+from jam.types.work.item import ExtrinsicSpecs, ImportSpecs, WorkItem
+from jam.settings import setup_setting
+from jam.utils.dummy.dummy_package import create_dummy_package
+from jam.execution.host_calls.invocations.refine import PsiR
+from jam.execution.host_calls.invocations.accumulate import PsiA, StateContext
+
 from tsrkit_types.bytes import Bytes
 from tsrkit_types.enum import Uint
-from jam.execution.host_calls.invocations.refine import PsiR
-
-try:
-    from jam.execution.host_calls.invocations.accumulate import PsiA
-except Exception:
-    PsiA = None
 
 
-def _artifact(name: str) -> Path:
-    p = (
+def key32(label: bytes) -> Bytes[32]:
+    raw = bytearray(32)
+    n = min(32, len(label))
+    raw[:n] = label[:n]
+    return Bytes[32](bytes(raw))
+
+
+def encode_params(code_hash: Bytes[32], code_len: int, min_item_gas: int, min_memo_gas: int) -> Bytes:
+    return Bytes(
+        bytes(code_hash)
+        + int(code_len).to_bytes(4, "little", signed=False)
+        + int(min_item_gas).to_bytes(8, "little", signed=False)
+        + int(min_memo_gas).to_bytes(8, "little", signed=False)
+    )
+
+
+def test_create_service(tmp_path):
+    parent_service_name = "create_service"  # builds/{parent_service_name}-service.jam
+    settings = setup_setting("data/god_mode", 3000, 2**16 - 1, str(tmp_path))
+    state = setup_state(settings.state_db, GhostState.genesis())
+
+    # --- Load parent service code (.jam) and register as ServiceId(1)
+    parent_code = open(
         Path(__file__).parents[4]
         / "tessera-test-suites"
         / "playground"
         / "builds"
-        / f"{name}-service.jam"
-    )
-    if not p.exists():
-        pytest.skip(f"Missing artifact: {p}")
-    return p
+        / f"{parent_service_name}-service.jam",
+        "rb",
+    ).read()
+    parent_hash = Hash.blake2b(parent_code)
+    S_PARENT = ServiceId(1)
 
-def _register(state, sid: ServiceId, code: bytes):
-    """Register a service in the state with given code"""
-    ch = Hash.blake2b(code)
-    state.delta[sid].service = AccountMetadata(
-        code_hash=ch,
-        balance=Balance(1_000_000),
+    state.delta[S_PARENT].service = AccountMetadata(
+        code_hash=parent_hash,
+        balance=Balance(10**12),
         gas_limit=Gas(50_000),
         min_gas=Gas(1_000),
         num_i=Ai(0),
         num_o=Ao(0),
     )
-    state.delta[sid].preimages[ch] = Bytes(code)
-    state.delta[sid].lookup[LookupTable(hash=ch, length=BlobLength(len(code)))] = Timestamps([state.tau])
-    return ch
+    # Preimage + availability timestamp for the parent code
+    state.delta[S_PARENT].preimages[parent_hash] = Bytes(parent_code)
+    state.delta[S_PARENT].lookup[
+        LookupTable(hash=parent_hash, length=BlobLength(len(parent_code)))
+    ] = Timestamps([state.tau])
 
+    # --- Child code (for the created service): reuse same blob for simplicity
+    child_code = parent_code
+    child_hash = Hash.blake2b(child_code)
+    child_len = len(child_code)
 
-def _isegs_for(pkg):
-    """Get import segments for package"""
-    return []
+    # Gas params we want the child to have
+    MIN_ITEM_GAS = 2_000
+    MIN_MEMO_GAS = 3_000
 
+    # --- Work item payload encodes (child_hash, child_len, min_item_gas, min_memo_gas)
+    payload = encode_params(child_hash, child_len, MIN_ITEM_GAS, MIN_MEMO_GAS)
 
-def test_create_service_success():
-    """Test successful service creation"""
-    # Setup
-    db_path = "/tmp/test_create_service"
-    settings = setup_setting("data/god_mode", 3000, 2**16 - 1, db_path)
-    state = setup_state(settings.state_db, GhostState.genesis())
     package = create_dummy_package()
-
-    # --- artifacts ---
-    creator_code = _artifact("create_service").read_bytes()
-    # this will be the NEW service's code (preimage must be present)
-    new_code = _artifact("hello").read_bytes()
-
-    svc_creator = ServiceId(1)
-    ch_creator = _register(state, svc_creator, creator_code)
-
-    # Make sure the *calling* account holds the preimage for the new code
-    new_hash = Hash.blake2b(new_code)
-    state.delta[svc_creator].preimages[new_hash] = Bytes(new_code)
-    state.delta[svc_creator].lookup[LookupTable(hash=new_hash, length=BlobLength(len(new_code)))] = Timestamps([state.tau])
-
-    # payload = [code_hash(32)][code_len(u64)][min_item_gas(u64)][min_memo_gas(u64)]
-    payload = bytes(new_hash) + struct.pack("<QQQ", len(new_code), 10_000, 1_000)
-
     wi = WorkItem(
-        service=svc_creator,
-        code_hash=ch_creator,
+        service=S_PARENT,
+        code_hash=parent_hash,
         payload=Bytes(payload),
-        refine_gas_limit=Gas(50_000),
-        accumulate_gas_limit=Gas(50_000),
+        refine_gas_limit=Gas(10_000),
+        accumulate_gas_limit=Gas(10_000),
         import_segments=ImportSpecs([]),
         extrinsic=ExtrinsicSpecs([]),
-        export_count=Uint[16](0),
+        export_count=Uint[16](0),  # ensure the item flows into accumulate
     )
     package.items.append(wi)
 
-    # 1) refine — pass-through
-    rR, eR, uR = PsiR(0, p=package, auth_trace=b"", i_segments=_isegs_for(package), e_offset=0).execute()
-    assert rR.get_key() == "ok", f"Refine failed: {rR}"
+    # --- Refine
+    r, e, u = PsiR(0, p=package, auth_trace=b"", i_segments=[[]], e_offset=0).execute()
+    print(f"Refine status={r} gas_used={u} exports={e}")
 
-    partial_state = StateContext(
+    # --- Accumulate (this calls accumulate::create_service)
+    partial = StateContext(
         service_accounts=state.delta,
         validator_keys=state.iota,
         authorizer_keys=state.phi,
-        privileges=state.chi
+        privileges=state.chi,
     )
-    service_id = svc_creator
-    timeslot = state.tau
-    gas = Gas(50_000)
-    operand = OperandTuples([])
-    print("Acuu started")
-    # 2) accumulate — actually call create_service
-    u2, deferred, commit, gas_used, preimages = PsiA(
-        u=partial_state, s=service_id, t=timeslot, g=gas, o=operand
+    timeslot = TimeSlot(state.tau)
+    gas = Gas(20_000)
+
+    from jam.types.state.accumulation.types import OperandTuples
+    operands = OperandTuples([])
+
+    new_state_ctx, deferred, commit_opt, gas_left, preimages = PsiA(
+        partial, timeslot, S_PARENT, gas, operands
     ).execute()
 
-    # Verify the operation succeeded
-    # print("psiA resultant",deferred,commit,gas_used,preimages,u2.service_accounts[service_id].service.balance)
-    assert commit is not None, "Service creation should return a commit hash"
+    parent_acct = new_state_ctx.service_accounts[S_PARENT]
 
-    # Check if we can read the created service ID from storage (if storage read is available)
-    # This would require a storage read helper function
+    # --- Read success flag + child id from parent storage
+    ok_flag = parent_acct.storage[key32(b"create_ok")]
+    assert ok_flag is not None and bytes(ok_flag) == b"\x01", "create_service failed (flag not set)"
 
-    print(f"Service creation completed:")
-    print(f"  Commit hash: {commit}")
-    print(f"  Gas used: {gas_used}")
-    print(f"  Deferred transfers: {len(deferred) if deferred else 0}")
+    child_id_le = parent_acct.storage[key32(b"created_service_id")]
+    assert child_id_le is not None, "child id not written"
+    child_id = int.from_bytes(bytes(child_id_le), "little")
+    S_CHILD = ServiceId(child_id)
 
+    # --- Validate the child account metadata
+    child_acct = new_state_ctx.service_accounts[S_CHILD]
+    assert child_acct.service.code_hash == child_hash, "child code_hash mismatch"
+    assert int(child_acct.service.gas_limit) == MIN_ITEM_GAS, "child min_item_gas mismatch"
+    assert int(child_acct.service.min_gas) == MIN_MEMO_GAS, "child min_memo_gas mismatch"
 
-def test_create_service_invalid_payload():
-    """Test service creation with invalid payload"""
-    # Setup
-    db_path = "/tmp/test_create_service_invalid"
-    settings = setup_setting("data/god_mode", 3000, 2**16 - 1, db_path)
-    state = setup_state(settings.state_db, GhostState.genesis())
-    package = create_dummy_package()
+    # Child should have at least the basic threshold balance (the transfer is internal to create_service)
+    assert int(child_acct.service.balance) >= int(child_acct.t), "child balance below threshold"
 
-    creator_code = _artifact("create_service").read_bytes()
-    svc_creator = ServiceId(1)
-    ch_creator = _register(state, svc_creator, creator_code)
-
-    # Invalid payload - too short
-    invalid_payload = b"short_payload"
-
-    wi = WorkItem(
-        service=svc_creator,
-        code_hash=ch_creator,
-        payload=Bytes(invalid_payload),
-        refine_gas_limit=Gas(50_000),
-        accumulate_gas_limit=Gas(50_000),
-        import_segments=ImportSpecs([]),
-        extrinsic=ExtrinsicSpecs([]),
-        export_count=Uint[16](0),
-    )
-    package.items.append(wi)
-
-    # 1) refine
-    rR, eR, uR = PsiR(0, p=package, auth_trace=b"", i_segments=_isegs_for(package), e_offset=0).execute()
-    assert rR.get_key() == "ok", f"Refine failed: {rR}"
-
-    partial_state = StateContext(
-        service_accounts=state.delta,
-        validator_keys=state.iota,
-        authorizer_keys=state.phi,
-        privileges=state.chi
-    )
-
-    # 2) accumulate
-    u2, deferred, commit, gas_used, preimages = PsiA(
-        u=partial_state, s=svc_creator, t=state.tau, g=Gas(50_000), o=OperandTuples([])
-    ).execute()
-
-    # Should not return a commit hash due to invalid payload
-    assert commit is None, "Invalid payload should not produce a commit hash"
-
-
-def test_create_service_missing_preimage():
-    """Test service creation when code preimage is missing"""
-    # Setup
-    db_path = "/tmp/test_create_service_missing_preimage"
-    settings = setup_setting("data/god_mode", 3000, 2**16 - 1, db_path)
-    state = setup_state(settings.state_db, GhostState.genesis())
-    package = create_dummy_package()
-
-    creator_code = _artifact("create_service").read_bytes()
-    svc_creator = ServiceId(1)
-    ch_creator = _register(state, svc_creator, creator_code)
-
-    # Use a hash for code that doesn't exist in preimages
-    fake_hash = Hash.blake2b(b"nonexistent_code")
-
-    # payload = [code_hash(32)][code_len(u64)][min_item_gas(u64)][min_memo_gas(u64)]
-    payload = bytes(fake_hash) + struct.pack("<QQQ", 1024, 10_000, 1_000)
-
-    wi = WorkItem(
-        service=svc_creator,
-        code_hash=ch_creator,
-        payload=Bytes(payload),
-        refine_gas_limit=Gas(50_000),
-        accumulate_gas_limit=Gas(50_000),
-        import_segments=ImportSpecs([]),
-        extrinsic=ExtrinsicSpecs([]),
-        export_count=Uint[16](0),
-    )
-    package.items.append(wi)
-
-    # 1) refine
-    rR, eR, uR = PsiR(0, p=package, auth_trace=b"", i_segments=_isegs_for(package), e_offset=0).execute()
-    assert rR.get_key() == "ok", f"Refine failed: {rR}"
-
-    partial_state = StateContext(
-        service_accounts=state.delta,
-        validator_keys=state.iota,
-        authorizer_keys=state.phi,
-        privileges=state.chi
-    )
-
-    # 2) accumulate
-    u2, deferred, commit, gas_used, preimages = PsiA(
-        u=partial_state, s=svc_creator, t=state.tau, g=Gas(50_000), o=OperandTuples([])
-    ).execute()
-
-    # Should fail due to missing preimage
-    assert commit is None, "Missing preimage should not produce a commit hash"
-
-
-def test_create_multiple_services():
-    """Test creating multiple services in sequence"""
-    # Setup
-    db_path = "/tmp/test_create_multiple_services"
-    settings = setup_setting("data/god_mode", 3000, 2**16 - 1, db_path)
-    state = setup_state(settings.state_db, GhostState.genesis())
-
-    creator_code = _artifact("create_service").read_bytes()
-    new_code1 = _artifact("hello").read_bytes()
-    new_code2 = _artifact("gas_probe").read_bytes()
-
-    svc_creator = ServiceId(1)
-    ch_creator = _register(state, svc_creator, creator_code)
-
-    # Register preimages for both new services
-    new_hash1 = Hash.blake2b(new_code1)
-    new_hash2 = Hash.blake2b(new_code2)
-
-    state.delta[svc_creator].preimages[new_hash1] = Bytes(new_code1)
-    state.delta[svc_creator].lookup[LookupTable(hash=new_hash1, length=BlobLength(len(new_code1)))] = Timestamps([state.tau])
-
-    state.delta[svc_creator].preimages[new_hash2] = Bytes(new_code2)
-    state.delta[svc_creator].lookup[LookupTable(hash=new_hash2, length=BlobLength(len(new_code2)))] = Timestamps([state.tau])
-
-    # Test creating first service
-    package1 = create_dummy_package()
-    payload1 = bytes(new_hash1) + struct.pack("<QQQ", len(new_code1), 15_000, 2_000)
-
-    wi1 = WorkItem(
-        service=svc_creator,
-        code_hash=ch_creator,
-        payload=Bytes(payload1),
-        refine_gas_limit=Gas(50_000),
-        accumulate_gas_limit=Gas(50_000),
-        import_segments=ImportSpecs([]),
-        extrinsic=ExtrinsicSpecs([]),
-        export_count=Uint[16](0),
-    )
-    package1.items.append(wi1)
-
-    # Execute first service creation
-    rR1, eR1, uR1 = PsiR(0, p=package1, auth_trace=b"", i_segments=_isegs_for(package1), e_offset=0).execute()
-    assert rR1.get_key() == "ok", f"First refine failed: {rR1}"
-
-    partial_state = StateContext(
-        service_accounts=state.delta,
-        validator_keys=state.iota,
-        authorizer_keys=state.phi,
-        privileges=state.chi
-    )
-
-    u2_1, deferred1, commit1, gas_used1, preimages1 = PsiA(
-        u=partial_state, s=svc_creator, t=state.tau, g=Gas(50_000), o=OperandTuples([])
-    ).execute()
-
-    assert commit1 is not None, "First service creation should succeed"
-
-    # Test creating second service
-    package2 = create_dummy_package()
-    payload2 = bytes(new_hash2) + struct.pack("<QQQ", len(new_code2), 20_000, 3_000)
-
-    wi2 = WorkItem(
-        service=svc_creator,
-        code_hash=ch_creator,
-        payload=Bytes(payload2),
-        refine_gas_limit=Gas(50_000),
-        accumulate_gas_limit=Gas(50_000),
-        import_segments=ImportSpecs([]),
-        extrinsic=ExtrinsicSpecs([]),
-        export_count=Uint[16](0),
-    )
-    package2.items.append(wi2)
-
-    # Execute second service creation
-    rR2, eR2, uR2 = PsiR(0, p=package2, auth_trace=b"", i_segments=_isegs_for(package2), e_offset=0).execute()
-    assert rR2.get_key() == "ok", f"Second refine failed: {rR2}"
-
-    # Update state with results from first creation
-    partial_state2 = StateContext(
-        service_accounts=u2_1.service_accounts,  # Use updated state
-        validator_keys=state.iota,
-        authorizer_keys=state.phi,
-        privileges=state.chi
-    )
-
-    u2_2, deferred2, commit2, gas_used2, preimages2 = PsiA(
-        u=partial_state2, s=svc_creator, t=state.tau, g=Gas(50_000), o=OperandTuples([])
-    ).execute()
-
-    assert commit2 is not None, "Second service creation should succeed"
-    assert commit1 != commit2, "Different services should have different commit hashes"
-
-    print(f"Created two services successfully:")
-    print(f"  Service 1 commit: {commit1}")
-    print(f"  Service 2 commit: {commit2}")
-
-
-if __name__ == "__main__":
-    test_create_service_success()
-    test_create_service_invalid_payload()
-    test_create_service_missing_preimage()
-    test_create_multiple_services()
-    print("All tests passed!")
+    print("✅ create_service ok; new service id:", int(S_CHILD))

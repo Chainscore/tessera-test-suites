@@ -1,24 +1,33 @@
-#![no_std]
+//! Minimal “create service” demo.
+//! - refine: echoes payload
+//! - accumulate: parses (code_hash, code_len, min_item_gas, min_memo_gas) from the first item,
+//!               calls `accumulate::create_service(..)`,
+//!               and writes the new ServiceId to storage under a fixed key.
+
+#![cfg_attr(any(target_arch = "riscv32", target_arch = "riscv64"), no_std)]
+
 extern crate alloc;
-use alloc::format;
+
+use alloc::vec::Vec;
+use core::convert::TryInto;
 use jam_pvm_common::{
     accumulate::{create_service, set_storage},
     declare_service, Service,
 };
-use jam_types::*;
+use jam_types::*; // CodeHash, ServiceId, Hash, (Gas is a type alias here)
 
-pub struct CreateService;
-declare_service!(CreateService);
+struct CreateSvc;
+declare_service!(CreateSvc);
 
-#[inline(always)]
-fn le_u64(x: &[u8]) -> u64 {
-    let mut b = [0u8; 8];
-    b.copy_from_slice(&x[..8]);
-    u64::from_le_bytes(b)
+#[inline]
+fn key32(label: &[u8]) -> [u8; 32] {
+    let mut out = [0u8; 32];
+    let n = core::cmp::min(32, label.len());
+    out[..n].copy_from_slice(&label[..n]);
+    out
 }
 
-impl Service for CreateService {
-    // Refine just forwards the payload bytes to accumulate.
+impl Service for CreateSvc {
     fn refine(
         _id: ServiceId,
         payload: WorkPayload,
@@ -26,64 +35,68 @@ impl Service for CreateService {
         _ctx: RefineContext,
         _auth: CodeHash,
     ) -> WorkOutput {
+        // Echo the payload; the test will place params in here.
         payload.take().into()
     }
 
-    fn accumulate(
-        _slot: Slot,
-        _id: ServiceId,
-        items: alloc::vec::Vec<AccumulateItem>,
-    ) -> Option<Hash> {
-        for it in items {
-            if let Ok(bytes) = it.result {
-                // Expect: [code_hash:32][code_len:u64][min_item_gas:u64][min_memo_gas:u64]
-                if bytes.len() < 56 {
-                    let _ = set_storage(b"/last_error", b"ERR:BadPayload");
-                    continue;
-                }
+    fn accumulate(_slot: Slot, _id: ServiceId, items: Vec<AccumulateItem>) -> Option<Hash> {
+        let ok_key = key32(b"create_ok");
+        let id_key = key32(b"created_service_id");
 
-                // code_hash
-                let mut h = [0u8; 32];
-                h.copy_from_slice(&bytes[0..32]);
-                let code_hash = CodeHash::from(h);
+        // Need one item carrying our params
+        let first = if let Some(it) = items.into_iter().next() {
+            it
+        } else {
+            let _ = set_storage(&ok_key, &[0u8]);
+            return None;
+        };
 
-                // code_len
-                let code_len: usize = le_u64(&bytes[32..40]) as usize;
+        // Bytes layout:
+        // 0..32  : code_hash (32 bytes)
+        // 32..36 : code_len  (u32 LE)
+        // 36..44 : min_item_gas (u64 LE)
+        // 44..52 : min_memo_gas (u64 LE)
+        let bytes = match first.result {
+            Ok(b) => b,
+            Err(_) => {
+                let _ = set_storage(&ok_key, &[0u8]);
+                return None;
+            }
+        };
+        if bytes.len() < 52 {
+            let _ = set_storage(&ok_key, &[0u8]);
+            return None;
+        }
 
-                // gas values (use Into to avoid guessing exact newtype)
-                let min_item_gas = le_u64(&bytes[40..48]).into();
-                let min_memo_gas = le_u64(&bytes[48..56]).into();
+        // code_hash
+        let mut ch = [0u8; 32];
+        ch.copy_from_slice(&bytes[0..32]);
+        // Use the 32-byte -> CodeHash ctor your jam_types exposes. `padded` is common.
+        let code_hash = CodeHash::padded(&ch);
 
-                match create_service(&code_hash, code_len, min_item_gas, min_memo_gas) {
-                    Ok(new_id) => {
-                        // store new_id (u32 LE) so tests can read it back from storage
-                        let raw: u32 = new_id.into();
-                        let ack = raw.to_le_bytes();
-                        let _ = set_storage(b"/last_created", &ack);
+        // code_len
+        let code_len = u32::from_le_bytes(bytes[32..36].try_into().unwrap()) as usize;
 
-                        // Also store success status for debugging
-                        let _ = set_storage(b"/last_error", b"OK:Success");
+        // gas values — just use u64 (Gas is a type alias in your build)
+        let min_item_gas: u64 = u64::from_le_bytes(bytes[36..44].try_into().unwrap());
+        let min_memo_gas: u64 = u64::from_le_bytes(bytes[44..52].try_into().unwrap());
+        // (If you prefer explicit annotation: `let min_item_gas: jam_types::Gas = ...;`)
 
-                        // Build commit hash with service creation details
-                        let mut msg = [0u8; 32];
-                        msg[0..4].copy_from_slice(b"CRTE");
-                        msg[4..8].copy_from_slice(&ack); // new service ID
-                        msg[8..16].copy_from_slice(&(code_len as u64).to_le_bytes());
-                        msg[16..24].copy_from_slice(&le_u64(&bytes[40..48]).to_le_bytes());
-                        msg[24..32].copy_from_slice(&le_u64(&bytes[48..56]).to_le_bytes());
-
-                        return Some(Hash::from(msg));
-                    }
-                    Err(e) => {
-                        // persist short human-readable error
-                        let s = format!("ERR:{:?}", e);
-                        let _ = set_storage(b"/last_error", s.as_bytes());
-                    }
-                }
+        match create_service(&code_hash, code_len, min_item_gas, min_memo_gas) {
+            Ok(new_id) => {
+                // success flag
+                let _ = set_storage(&ok_key, &[1u8]);
+                // store child id in LE u32 for easy reads in tests
+                let id_le = (u32::from(new_id)).to_le_bytes();
+                let _ = set_storage(&id_key, &id_le);
+            }
+            Err(_e) => {
+                let _ = set_storage(&ok_key, &[0u8]);
             }
         }
+
         None
     }
 
-    fn on_transfer(_slot: Slot, _id: ServiceId, _items: alloc::vec::Vec<TransferRecord>) {}
+    fn on_transfer(_slot: Slot, _id: ServiceId, _items: Vec<TransferRecord>) {}
 }

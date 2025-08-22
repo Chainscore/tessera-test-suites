@@ -106,6 +106,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ejectt-service"
+version = "0.1.0"
+dependencies = [
+ "jam-pvm-common",
+ "jam-types",
+ "polkavm-derive",
+]
+
+[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -212,6 +221,15 @@ dependencies = [
 
 [[package]]
 name = "is_available-service"
+version = "0.1.0"
+dependencies = [
+ "jam-pvm-common",
+ "jam-types",
+ "polkavm-derive",
+]
+
+[[package]]
+name = "is_available_accu-service"
 version = "0.1.0"
 dependencies = [
  "jam-pvm-common",
