@@ -8,12 +8,11 @@ from tsrkit_types import Bytes
 
 from jam.logging import logger, setup_logging
 from jam.state.ghost import GhostState
-from jam.state.merkle import StateTrie
 from jam.state.state import setup_state
 from rockstore import RockStore
-from jam.types.block import Block
+from jam.block.block import Block
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
+TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy"
 
 def fetch_vectors(module: str, pattern: str):
     vector_dir = TRACE_ROOT / "traces" / module

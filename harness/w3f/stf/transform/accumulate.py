@@ -13,7 +13,7 @@ from jam.types.protocol.core import TimeSlot
 from jam.types.state.chi import Chi
 from jam.types.state.delta import Delta
 from jam.types.state.eta import Eta
-from jam.types.state.nu import Nu
+from jam.types.state.omega import Omega
 from jam.types.state.pi import AllServiceStats
 from jam.types.state.sigma import Sigma
 from jam.types.state.tau import Tau
@@ -44,7 +44,7 @@ def transform_state(vector_state: dict) -> Sigma:
     # @akash
     # state.delta = Delta.from_json(vector_state["accounts"])
 
-    state.nu = Nu.from_json(vector_state["ready_queue"])
+    state.omega = Omega.from_json(vector_state["ready_queue"])
     state.xi = Xi.from_json(vector_state["accumulated"])
      
     return state
