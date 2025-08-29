@@ -16,7 +16,7 @@ from jam.block.block import Block
 #     get_testcases_starting_with,
 # )j
 
-from jam.types.state.gamma import GammaK
+from jam.types.state.gamma import GammaP
 from jam.types.state.psi import Psi
 from jam.types.state.sigma import Sigma
 from jam.types.state.tau import Tau

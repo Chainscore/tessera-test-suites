@@ -34,10 +34,10 @@ def transform_block(vector_input: dict) -> (Block, Dict):
 
 def transform_state(vector_state: dict) -> Sigma:
     state = GhostState.genesis()
-    for block in vector_state["recent_blocks"]:
-        if not isinstance(block["mmr"], list):
-            block["mmr"] = block["mmr"]["peaks"]
-        block["packages"] = []
+
+    if not isinstance(vector_state["recent_blocks"]["mmr"], list):
+        vector_state["recent_blocks"]["mmr"] = vector_state["recent_blocks"]["mmr"]["peaks"]
+    vector_state["recent_blocks"]["packages"] = []
 
     state.rho = Rho.from_json(vector_state["avail_assignments"])
     state.eta = Eta.from_json(vector_state["entropy"])
