@@ -45,8 +45,8 @@ def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_comp
         actual_sub = subset_to_compare(post_actual)
 
         from deepdiff import DeepDiff
-        for ours, theirs in zip(expect_sub,actual_sub):
-            value_diff = DeepDiff(theirs.to_json(), ours.to_json(), significant_digits=0, verbose_level=2)
+        for new_value_expected, old_value_ours in zip(expect_sub, actual_sub):
+            value_diff = DeepDiff(old_value_ours.to_json(), new_value_expected.to_json(), significant_digits=0, verbose_level=2)
             assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
             # types_diff = DeepDiff(theirs, ours, significant_digits=0, verbose_level=2)
             # assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"

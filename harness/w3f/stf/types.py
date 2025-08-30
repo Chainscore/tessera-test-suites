@@ -1,8 +1,9 @@
+from typing import Self
 from tsrkit_types import structure, Uint, Dictionary, Bytes
 
 from jam.types.protocol.core import Gas, ServiceId
 from jam.types.protocol.crypto import OpaqueHash, Hash
-from jam.types.state.delta import AccountPreimages, AccountStorage as AS, Delta, AccountData as AD, AccountPreimages, \
+from jam.types.state.delta import AccountPreimages, AccountStorage, Delta, AccountData as AD, AccountPreimages, \
 	AccountMetadata, AccountLookup
 
 @structure
@@ -17,10 +18,6 @@ class Service:
 	creation_slot: Uint[32]
 	last_accumulation_slot: Uint[32]
 	parent_service: Uint[32]
-
-class AccountStorage(Dictionary[Bytes, Bytes, "key", "value"]):
-	"""Storage dictionary"""
-	...
 
 @structure
 class AccountData:
@@ -45,7 +42,7 @@ class InputAccounts(Dictionary[ServiceId, AccountData, "id", "data"]):
 					accumulated_at=val.service.last_accumulation_slot,
 					parent_service=val.service.parent_service
 				),
-				storage=AS({Bytes(ServiceId(key).encode() + bytes(_key)): value for _key, value in val.storage.items()}),
+				storage=val.storage,
 				preimages=val.preimages,
 				lookup=AccountLookup({})
 			)
