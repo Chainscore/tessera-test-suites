@@ -21,7 +21,7 @@ def fetch_vector(module: str, pattern: str):
 
 setup_logging(theme="default", environment="testing")
 
-def test_traces(module, pattern, db_path):
+def test_traces(module, db_path):
     db_path = db_path
     block_n = 1
 

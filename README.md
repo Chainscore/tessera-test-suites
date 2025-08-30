@@ -85,8 +85,8 @@ You can customize your test runs using the following CLI options (defined in con
 #### --module
 
 Specifies which STF module to test.
-	•	Must match the folder name in harness/w3f/stf/transform/
-	•	If omitted, runs all available modules
+  •	Must match the folder name in harness/w3f/stf/transform/
+  •	If omitted, runs all available modules
 
 ```
 --module safrole
@@ -106,8 +106,8 @@ Specifies the test vector spec directory to use (tiny, full, etc).
 #### --pattern
 
 File pattern to match test vectors.
-	•	Default: "*.json"
-	•	Can be used to test only specific cases:
+  •	Default: "*.json"
+  •	Can be used to test only specific cases:
 ```
 --pattern skip-*.json
 --pattern test-42.json
@@ -148,3 +148,15 @@ Increase verbosity to show:
 Quiet mode—removes test collection summary and extra logging.
 
 
+## Pull latest changes for all external vectors
+
+To update all submodules in this repository to their latest remote commits, run:
+
+```sh
+git submodule update --init --recursive
+git submodule foreach git fetch
+git submodule foreach git checkout main  # or the default branch for each submodule
+git submodule foreach git pull
+```
+
+This will ensure all submodules are initialized, checked out to their main branch (or default), and updated to the latest remote changes. Adjust the branch name if your submodules use a different default branch.
