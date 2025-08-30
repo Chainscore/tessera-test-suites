@@ -7,7 +7,7 @@ from jam.error import JamError
 from jam.settings import setup_setting
 from jam.state.state import setup_state
 
-STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f" / "stf"
+STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy" / "stf"
 
 def fetch_vectors(module: str, spec: str, pattern: str):
     vector_dir = STF_ROOT / module / spec
@@ -45,10 +45,10 @@ def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_comp
         actual_sub = subset_to_compare(post_actual)
 
         from deepdiff import DeepDiff
-        for ours, thiers in zip(expect_sub,actual_sub):
-            value_diff = DeepDiff(thiers.to_json(), ours.to_json(), significant_digits=0, verbose_level=2)
+        for ours, theirs in zip(expect_sub,actual_sub):
+            value_diff = DeepDiff(theirs.to_json(), ours.to_json(), significant_digits=0, verbose_level=2)
             assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
-            # types_diff = DeepDiff(thiers, ours, significant_digits=0, verbose_level=2)
+            # types_diff = DeepDiff(theirs, ours, significant_digits=0, verbose_level=2)
             # assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"
 
     except JamError as e:

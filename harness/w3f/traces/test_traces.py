@@ -12,7 +12,7 @@ from jam.state.state import setup_state
 from rockstore import RockStore
 from jam.block.block import Block
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
+TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy"
 
 def fetch_vectors(module: str, pattern: str):
     vector_dir = TRACE_ROOT / "traces" / module
