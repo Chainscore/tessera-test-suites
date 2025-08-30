@@ -19,7 +19,5 @@ def pytest_generate_tests(metafunc):
     else:
         modules = [module]
 
-    pattern = metafunc.config.getoption("pattern")
-
-    params = [(m, pattern) for m in modules]
-    metafunc.parametrize("module,pattern", params)
+    params = [m for m in modules]
+    metafunc.parametrize("module", params)

@@ -10,7 +10,7 @@ from jam.logging import logger, setup_logging
 from jam.state.state import State, setup_state, set_state
 from jam.block.block import Block
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
+TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy"
 
 def fetch_vector(module: str, pattern: str):
     vector_dir = TRACE_ROOT / "traces" / module
@@ -36,7 +36,7 @@ def test_traces(module, db_path):
             name, vector = fetch_vector(module, f"{"".join(["0" for _ in range(8 - len(str(block_n)))])}{block_n}.json")[0]
             print(f"\n ⏭️Running test case {name} ...")
         except IndexError as e:
-            print("Finished!")
+            print("Finished!", f"{"".join(["0" for _ in range(8 - len(str(block_n)))])}{block_n}.json", "not found.")
             break 
 
         if block_n == 1:
