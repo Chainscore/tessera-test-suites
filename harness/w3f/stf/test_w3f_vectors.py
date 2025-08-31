@@ -55,7 +55,6 @@ def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_comp
         assert vector["output"].get("err") == e.code.value
 
 def test_stf_vectors(module, spec, pattern):
-    print("mod", module, spec, pattern)
     tblock, tstate, transition, compare_state = load_stf_module(module)
     shutil.rmtree("data/tmp")
     for name, vector in fetch_vectors(module, spec, pattern):

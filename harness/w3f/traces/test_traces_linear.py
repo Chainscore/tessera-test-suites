@@ -1,8 +1,11 @@
 import json
+from jam.state.utils import construct_state_key
+from jam.types.state.delta import AccountMetadata
+import pytest
 import os
 from pathlib import Path
 
-from jam.types import Gamma
+from jam.types import Beta, Eta, Gamma, Pi
 
 from tsrkit_types import Bytes
 
@@ -21,7 +24,8 @@ def fetch_vector(module: str, pattern: str):
 
 setup_logging(theme="default", environment="testing")
 
-def test_traces(module, db_path):
+@pytest.mark.asyncio
+async def test_traces(module, pattern, db_path):
     db_path = db_path
     block_n = 1
 
@@ -81,7 +85,19 @@ def test_traces(module, db_path):
             if k not in actual:
                 print("NEW KEY", k, v)
             elif v != actual[k]:
-                print("DIFF", Gamma.decode(bytes.fromhex(v)), Gamma.decode(bytes.fromhex(actual[k])))
+                cls_ = None
+
+                if k == construct_state_key(3).hex(): cls_ = Beta 
+                if k == construct_state_key(4).hex(): cls_ = Gamma 
+                if k == construct_state_key(13).hex(): cls_ = Pi
+                if k == construct_state_key((255, 0)).hex(): cls_ = AccountMetadata
+                if cls_: print(
+                    "Expected ---\n", 
+                    cls_.decode(bytes.fromhex(v)), 
+                    "\nActual ---\n", 
+                    cls_.decode(bytes.fromhex(actual[k]))
+                )
+                else: print("DIFF", k, v, actual[k])
         assert state.root.hex() == vector["post_state"]["state_root"][2:]
         print(f"✅Passed block: {block_n}")
         block_n += 1
