@@ -4,6 +4,7 @@ from pathlib import Path
 
 from jam.settings import setup_setting
 
+import pytest
 from tsrkit_types import Bytes
 
 from jam.logging import logger, setup_logging
@@ -25,7 +26,8 @@ os.environ["LOG_LEVEL_HOST_CALLS"] = "debug"
 
 setup_logging(theme="default", environment="testing")
 
-def test_traces(module, pattern, db_path):
+@pytest.mark.asyncio
+async def test_traces(module, pattern, db_path):
     db_path = db_path
     for name, vector in fetch_vectors(module, pattern):
         print(f"\n ⏭️Running test case {name} ...")
@@ -62,7 +64,7 @@ def test_traces(module, pattern, db_path):
 
         if post_state.pi != state.pi:
             print("MISMATCHED PI")
-            print("DIFF", DeepDiff(state.pi.to_json(), post_state.pi.to_json(), significant_digits=0, verbose_level=2, view="tree"))
+            print("DIFF\n", DeepDiff(state.pi.to_json(), "\n", post_state.pi.to_json(), significant_digits=0, verbose_level=2, view="tree"))
             print("PRE PI", PRE_PI)
         if post_state.rho != state.rho:
             print("MISMATCHED RHO")
@@ -81,6 +83,6 @@ def test_traces(module, pattern, db_path):
             if k not in actual:
                 print("NEW KEY", k, v)
             elif v != actual[k]:
-                print("DIFF", k, v, actual[k])
+                print("DIFF: ", k, "\nExpected:", v, "\nActual:", actual[k], "\nPre", PRE_PI.encode().hex())
         assert state.root.hex() == vector["post_state"]["state_root"][2:]
         print("✅Passed")
