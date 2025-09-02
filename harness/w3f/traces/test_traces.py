@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 
+from jam.finality.finality import Finality
 from jam.settings import setup_setting
 
 import pytest
@@ -19,7 +20,7 @@ def fetch_vectors(module: str, pattern: str):
     vector_dir = TRACE_ROOT / "traces" / module
     return [
         (f.name, json.load(open(f)))
-        for f in vector_dir.glob(pattern)
+        for f in vector_dir.glob(pattern.replace('"', '').replace("'", ""))
     ]
 
 os.environ["LOG_LEVEL_HOST_CALLS"] = "debug"
@@ -36,7 +37,7 @@ async def test_traces(module, pattern, db_path):
         db = RockStore(db_path + "/" + name)
         post_db = RockStore(db_path + "/" + name + "/post")
 
-        if name == "00000000.json":
+        if name == "00000000.json" or name == "genesis.json":
             print("Skipping genesis...")
             continue
 
@@ -55,7 +56,7 @@ async def test_traces(module, pattern, db_path):
         PRE_PI = state.pi
         PRE_BETA = state.beta
         PRE_RHO = state.rho
-
+        
         state.transition(block)
         from deepdiff import DeepDiff
 
@@ -83,6 +84,6 @@ async def test_traces(module, pattern, db_path):
             if k not in actual:
                 print("NEW KEY", k, v)
             elif v != actual[k]:
-                print("DIFF: ", k, "\nExpected:", v, "\nActual:", actual[k], "\nPre", PRE_PI.encode().hex())
+                print("DIFF: ", k, "\nEXP \t", v, "\nACT \t", actual[k], "\nPRE \t", pre_data[Bytes.fromhex(k)].hex() if Bytes.fromhex(k) in pre_data else None)
         assert state.root.hex() == vector["post_state"]["state_root"][2:]
         print("✅Passed")

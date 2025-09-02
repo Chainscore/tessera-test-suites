@@ -19,7 +19,7 @@ def fetch_vector(module: str, pattern: str):
     vector_dir = TRACE_ROOT / "traces" / module
     return [
         (f.name, json.load(open(f)))
-        for f in vector_dir.glob(pattern)
+        for f in vector_dir.glob(pattern.replace('"', '').replace("'", ""))
     ]
 
 setup_logging(theme="default", environment="testing")

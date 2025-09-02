@@ -1,6 +1,9 @@
+from pathlib import Path
 from typing import Dict, Tuple
 
 from jam.state.ghost import GhostState
+from jam.state.state import State
+from jam.state.utils import construct_state_key
 from jam.types import OpaqueHash
 from jam.block.block import Block
 from jam.block.extrinsics.guarantees import GuaranteesExtrinsic, ReportGuarantee, ValidatorSignatures
@@ -32,22 +35,22 @@ def transform_block(vector_input: dict) -> (Block, Dict):
 
 
 def transform_state(vector_state: dict) -> Sigma:
-    state = GhostState.genesis()
+    state = {}
     if not isinstance(vector_state["beta"]["mmr"], list):
-        vector_state["beta"]["mmr"]=vector_state["beta"]["mmr"]["peaks"]
+        vector_state["beta"]["mmr"] = vector_state["beta"]["mmr"]["peaks"]
 
-    state.beta = Beta.from_json(vector_state["beta"])
-    return state
+    state[construct_state_key(3)] = Beta.from_json(vector_state["beta"]).encode()
+    return {key.hex(): value.hex() for key, value in state.items()}
 
 
 def subset_to_compare(state: Sigma) -> Tuple[Beta]:
     """
     Pull out only the fields we actually want to assert on
-    (validator‐stats and slot in this example).
     """
-    return (
-        state.beta,
-    )
-
+    if isinstance(state, State):
+        data = {k.hex(): v.hex() for k, v in state.store._DB.get_all().items()}
+    else:
+        data = state
+    return data
 
 transition = RecentHistory.transition

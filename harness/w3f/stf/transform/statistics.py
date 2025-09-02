@@ -1,5 +1,8 @@
+from pathlib import Path
 from typing import Tuple, Dict
 from jam.state.ghost import GhostState
+from jam.state.state import State
+from jam.state.utils import construct_state_key
 from jam.types.protocol.core import ValidatorIndex
 from jam.types.state.kappa import Kappa
 from jam.types.work import WorkReports
@@ -54,15 +57,16 @@ def transform_block(vector_input: dict) -> (Block, Dict):
 
 
 def transform_state(vector_state: dict) -> Sigma:
-    state = GhostState.genesis()
-    state.pi = Pi(
+    state = {}
+    state[construct_state_key(13)] = Pi(
         vals_current=AllValidatorStats.from_json(vector_state["vals_curr_stats"]),
         vals_last=AllValidatorStats.from_json(vector_state["vals_last_stats"]),
         cores=AllCoreStats.empty(),
         services=AllServiceStats({}),
-    )
-    state.kappa = Kappa.from_json(vector_state["curr_validators"])
-    return state
+    ).encode()
+    state[construct_state_key(8)] = Kappa.from_json(vector_state["curr_validators"]).encode()
+    state[construct_state_key(11)] = Tau.from_json(vector_state["slot"]).encode()
+    return {key.hex(): value.hex() for key, value in state.items()}
 
 
 def subset_to_compare(state: Sigma) -> Tuple:
@@ -70,13 +74,11 @@ def subset_to_compare(state: Sigma) -> Tuple:
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    return (
-        state.psi,
-        state.rho,
-        state.tau,
-        state.kappa,
-        state.lambda_,
-    )
+    if isinstance(state, State):
+        data = {k.hex(): v.hex() for k, v in state.store._DB.get_all().items()}
+    else:
+        data = state
+    return data
 
 
 transition = Statistics.transition
