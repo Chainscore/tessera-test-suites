@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+from time import time
 
 from jam.settings import setup_setting
 
@@ -12,6 +13,7 @@ from jam.logging import logger, setup_logging
 from jam.state.state import setup_state
 from rockstore import RockStore
 from jam.block.block import Block
+from jam.types.state.rho import Rho
 
 TRACE_ROOT = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.0" / "traces"
 
@@ -24,12 +26,12 @@ def fetch_vectors(module: str, pattern: str):
     vectors = []
     
     # Iterate through timestamped directories
-    for timestamp_dir in TRACE_ROOT.glob(pattern.replace('"', '').replace("'", "")):
+    for timestamp_dir in TRACE_ROOT.glob(module.replace('"', '').replace("'", "")):
         if not timestamp_dir.is_dir():
             continue
 
         # Process JSON files matching the pattern in each timestamp directory
-        for trace_file in timestamp_dir.glob("*.json"):
+        for trace_file in timestamp_dir.glob(pattern.replace('"', '').replace("'", "")):
             try:
                 with open(trace_file, 'r') as f:
                     trace_data = json.load(f)
@@ -58,8 +60,13 @@ async def test_traces(module, pattern, db_path):
         print(f"\n ⏭️Running test case {name} ...")
         if Path("data/tmp").exists():
             shutil.rmtree("data/tmp")
-        settings = setup_setting(data_path=f"data/tmp/{name}/main")
-        post_db = RockStore(f"data/tmp/{name}/post")
+        
+        
+        t = time()
+        settings = setup_setting(data_path=f"data/tmp/{t}/main")
+        
+        db = RockStore(f"data/tmp/{t}/main")
+        post_db = RockStore(f"data/tmp/{t}/post")
         
         if name == "00000000.json" or name == "genesis.json":
             print("Skipping genesis...")
@@ -69,7 +76,7 @@ async def test_traces(module, pattern, db_path):
         block = Block.from_json(vector["block"])
 
         pre_data = {Bytes.from_json(keyval["key"]):Bytes.from_json(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}
-        state = setup_state(settings.state_db, pre_data)
+        state = setup_state(db, pre_data)
 
         logger.info("Starting transition...", len_state=len(pre_data))
         PRE_PI = state.pi
@@ -87,7 +94,8 @@ async def test_traces(module, pattern, db_path):
             print("DIFF\n", DeepDiff(state.pi.to_json(), post_state.pi.to_json(), significant_digits=0, verbose_level=2, view="tree"))
         if post_state.rho != state.rho:
             print("MISMATCHED RHO")
-            print("DIFF", DeepDiff(state.rho.to_json(), post_state.rho.to_json(), significant_digits=0, verbose_level=2, view="tree"))
+            print("DIFF\n", DeepDiff(state.rho.to_json(), post_state.rho.to_json(), significant_digits=0, verbose_level=2, view="tree"))
+
         if post_state.beta != state.beta:
             print("MISMATCHED BETA")
             print("DIFF", DeepDiff(state.beta.to_json(), post_state.beta.to_json(), significant_digits=0, verbose_level=2, view="tree"))
@@ -103,4 +111,3 @@ async def test_traces(module, pattern, db_path):
                 print("DIFF: ", k, "\nEXP \t", v, "\nACT \t", actual[k], "\nPRE \t", pre_data[Bytes.fromhex(k)].hex() if Bytes.fromhex(k) in pre_data else None)
         assert state.root.hex() == vector["post_state"]["state_root"][2:]
         print("✅Passed")
-        return
