@@ -88,7 +88,12 @@ def subset_to_compare(state: Sigma) -> Tuple:
         data = {k.hex(): v.hex() for k, v in state.store._DB.get_all().items()}
     else:
         data = state
+    data[construct_state_key(11).hex()] = Tau(0).encode().hex()
     return data
 
 
-transition = Reporting.transition
+def transition(pre_state, state, block, **args):
+    state.tau = block.header.slot
+    state = Reporting.transition(pre_state, state, block, **args)
+
+    return state
