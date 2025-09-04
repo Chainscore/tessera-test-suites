@@ -18,3 +18,6 @@
 	path = ext/w3f-davxy
 	url = https://github.com/davxy/jam-test-vectors
 	branch = master
+[submodule "ext/jam-conformance"]
+	path = ext/jam-conformance
+	url = https://github.com/davxy/jam-conformance.git
