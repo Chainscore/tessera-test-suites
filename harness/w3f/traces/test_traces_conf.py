@@ -24,28 +24,38 @@ def fetch_vectors(module: str, pattern: str):
     pattern should match JSON files in timestamp directories.
     """
     vectors = []
-    
-    # Iterate through timestamped directories
-    for timestamp_dir in TRACE_ROOT.glob(module.replace('"', '').replace("'", "")):
-        if not timestamp_dir.is_dir():
-            continue
 
-        # Process JSON files matching the pattern in each timestamp directory
-        for trace_file in timestamp_dir.glob(pattern.replace('"', '').replace("'", "")):
-            try:
-                with open(trace_file, 'r') as f:
-                    trace_data = json.load(f)
-                
-                # Validate trace structure
-                if not all(key in trace_data for key in ['pre_state', 'post_state']):
-                    continue
-                
-                # Create descriptive name: timestamp_filename
-                name = f"{timestamp_dir.name}_{trace_file.name}"
-                vectors.append((name, trace_data))
-            
-            except (json.JSONDecodeError, IOError):
+    files = []
+
+    if not module or not pattern:
+        raise ValueError("Must provide module and pattern")
+
+    if pattern == "all":
+        files = list(TRACE_ROOT.rglob("*.json"))
+    else:
+        for timestamp_dir in TRACE_ROOT.glob(module.replace('"', "").replace("'", "")):
+            if timestamp_dir.is_dir():
+                matched = list(timestamp_dir.glob(pattern.replace('"', "").replace("'", "")))
+                files.extend(matched)
+
+    print(f"\nFetched: {len(files)} vectors\n")
+
+    # Process JSON files matching the pattern in each timestamp directory
+    for trace_file in files:
+        try:
+            with open(trace_file, 'r') as f:
+                trace_data = json.load(f)
+
+            # Validate trace structure
+            if not all(key in trace_data for key in ['pre_state', 'post_state']):
                 continue
+
+            # Create descriptive name: timestamp_filename
+            name = f"{trace_file.parent.name}_{trace_file.name}"
+            vectors.append((name, trace_data))
+
+        except (json.JSONDecodeError, IOError):
+            continue
     
     return vectors
 
