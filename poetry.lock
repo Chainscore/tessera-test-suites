@@ -1777,19 +1777,14 @@ name = "tsrkit-pvm"
 version = "0.1.0"
 description = "Polkadot Virtual Machine (PVM) implementation with interpreter and recompiler as specified in GP"
 optional = false
-python-versions = ">=3.11"
+python-versions = ">=3.12,<4.0"
 groups = ["main"]
 files = []
 develop = true
 
 [package.dependencies]
-tsrkit-asm = "*"
-tsrkit-types = "*"
-
-[package.extras]
-dev = ["black (>=23.0.0)", "flake8 (>=6.0.0)", "isort (>=5.12.0)", "mypy (>=1.0.0)", "pre-commit (>=3.0.0)", "pytest (>=7.0.0)", "pytest-cov (>=4.0.0)"]
-docs = ["myst-parser (>=1.0.0)", "sphinx (>=6.0.0)", "sphinx-rtd-theme (>=1.2.0)"]
-test = ["pytest (>=7.0.0)", "pytest-benchmark (>=4.0.0)", "pytest-cov (>=4.0.0)"]
+tsrkit_asm = {path = "../tsrkit-asm", develop = true}
+tsrkit_types = {path = "../tsrkit-types", develop = true}
 
 [package.source]
 type = "directory"
