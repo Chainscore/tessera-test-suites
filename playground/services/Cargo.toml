@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "hello",
-    "counter"
+    "counter",
+    "tictactoe"
 ]
 
 resolver = "2"

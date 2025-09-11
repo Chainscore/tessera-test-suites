@@ -292,6 +292,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tictactoe"
+version = "0.1.0"
+dependencies = [
+ "jam-pvm-common",
+ "jam-types",
+ "polkavm-derive",
+]
+
+[[package]]
 name = "toml_datetime"
 version = "0.6.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
