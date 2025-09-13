@@ -14,8 +14,6 @@ import dotenv
 
 dotenv.load_dotenv(".env")
 
-setup_logging(theme="default", environment="testing")
-
 
 TRACE_ROOT = Path(__file__).parent.parent.parent / "ext" / "w3f-davxy"
 
@@ -48,15 +46,16 @@ async def test_traces(db_path):
     
     """
     With Profiler
-    #4: 2.05s -> 1.99s -> 1.89s -> 1.36s
-    #8: 4.85s -> 3.34s -> 3.08s -> 1.96s
+    #4: 2.05s -> 1.99s -> 1.89s -> 1.36s -> 0.71s
+    #8: 4.85s -> 3.34s -> 3.08s -> 1.96s -> 1.25s
     
     Without Profiler
-    #4: 1s -> 1.26s -> 1.06s
-    #8: 2.29s -> 2s -> 1.64s
-    0-100: ... -> 42.92s -> 30s
+    #4: 1s -> 1.26s -> 1.06s -> 0.52s
+    #8: 2.29s -> 2s -> 1.64s -> 1.08s
+    
+    0-100: 60+s -> 42.92s -> 30s -> 24.36s -> 22.57s
     """
-    inspect = 1
+    inspect = 0
     if inspect:
         start_block = 8
         n_blocks = 1
@@ -94,7 +93,7 @@ async def test_traces(db_path):
         start_time = time.perf_counter()
         
         if w_profiler:
-            with Profiler("block transition", limit=50):
+            with Profiler("block transition", limit=100):
                 state.transition(block)
         else:
             state.transition(block)
