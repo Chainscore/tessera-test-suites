@@ -25,7 +25,7 @@ def fetch_vectors(module: str, pattern: str):
 
 os.environ["LOG_LEVEL_HOST_CALLS"] = "debug"
 
-setup_logging(theme="default", environment="testing")
+setup_logging("default", "test-traces")
 
 @pytest.mark.asyncio
 async def test_traces(module, pattern, db_path):

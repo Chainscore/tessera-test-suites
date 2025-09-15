@@ -1,14 +1,11 @@
 import json
 import importlib
-from copy import deepcopy
 from pathlib import Path
 import shutil
-
 import pytest
 from jam.error import JamError
 from jam.settings import setup_setting
 from jam.state.state import setup_state
-from jam.types.state.omega import Omega
 
 STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy" / "stf"
 

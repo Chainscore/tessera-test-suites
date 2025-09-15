@@ -5,6 +5,8 @@ import os
 import sys
 from pathlib import Path
 
+from jam.logging import setup_logging
+
 # Add tsr-py directory to path for imports if running from tessera-test-suites
 if 'tessera-test-suites' in os.getcwd():
     tsr_py_path = Path(os.getcwd()).parent / 'tessera'
@@ -13,13 +15,13 @@ if 'tessera-test-suites' in os.getcwd():
 
 # Set up logging environment variables if not already set
 if "LOG_LEVEL" not in os.environ:
-    os.environ["LOG_LEVEL"] = "error"
-    os.environ["LOG_LEVEL_IMPORT"] = "error"
-    os.environ["LOG_LEVEL_AUTHOR"] = "error"
-    os.environ["LOG_LEVEL_NETWORK"] = "error"
-    os.environ["LOG_LEVEL_PVM"] = "critical"
-    os.environ["LOG_LEVEL_HOST_CALLS"] = "critical"
-    os.environ["LOG_LEVEL_IN_CORE"] = "error"
+    os.environ["JAM_LOG_LEVEL"] = "error"
+    os.environ["JAM_LOG_LEVEL_BLOCK"] = "error"
+    os.environ["JAM_LOG_LEVEL_NODE"] = "error"
+    os.environ["JAM_LOG_LEVEL_NETWORK"] = "error"
+    os.environ["JAM_LOG_LEVEL_PVM"] = "critical"
+
+setup_logging("default", "test")
 
 @pytest.fixture
 def db_path():

@@ -22,7 +22,7 @@ def fetch_vector(module: str, pattern: str):
         for f in vector_dir.glob(pattern.replace('"', '').replace("'", ""))
     ]
 
-setup_logging(theme="default", environment="testing")
+setup_logging("default", "test-linear-traces")
 
 @pytest.mark.asyncio
 async def test_traces(module, pattern, db_path):
