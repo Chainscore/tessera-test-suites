@@ -30,8 +30,7 @@ tessera-test-suites/
 ├── scripts/           # Helper scripts (e.g., vector updater)
 ├── vendor/            # External vector sets (added via git submodules)
 ├── README.md          # You are here
-├── pyproject.toml     # Uses Poetry, installs tsr-py in editable mode
-└── poetry.lock
+├── pyproject.toml     # Uses UV workspaces, inherits test deps from main project
 ```
 
 ## 🧑‍💻 Setup

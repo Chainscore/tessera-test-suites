@@ -1,5 +1,6 @@
 import json
 from math import floor
+import os
 import time
 import pytest
 from pathlib import Path
@@ -24,7 +25,7 @@ def fetch_vector(module: str, pattern: str):
         for f in vector_dir.glob(pattern.replace('"', '').replace("'", ""))
     ]
 
-setup_logging(theme="default", environment="testing")
+setup_logging("default", "test")
 
 @pytest.mark.asyncio
 async def test_traces(db_path):
@@ -55,11 +56,11 @@ async def test_traces(db_path):
     
     0-100: 60+s -> 42.92s -> 30s -> 24.36s -> 22.57s
     """
-    inspect = 0
+    inspect = 1
     if inspect:
-        start_block = 8
+        start_block = 4
         n_blocks = 1
-        w_profiler = True
+        w_profiler = 0
 
     total_import_time = 0
 

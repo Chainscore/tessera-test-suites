@@ -14,12 +14,16 @@ if 'tessera-test-suites' in os.getcwd():
         sys.path.insert(0, str(tsr_py_path))
 
 # Set up logging environment variables if not already set
-if "LOG_LEVEL" not in os.environ:
+if "JAM_LOG_LEVEL" not in os.environ:
     os.environ["JAM_LOG_LEVEL"] = "error"
+if "JAM_LOG_LEVEL_BLOCK" not in os.environ:
     os.environ["JAM_LOG_LEVEL_BLOCK"] = "error"
+if "JAM_LOG_LEVEL_NODE" not in os.environ:
     os.environ["JAM_LOG_LEVEL_NODE"] = "error"
+if "JAM_LOG_LEVEL_NETWORK" not in os.environ:
     os.environ["JAM_LOG_LEVEL_NETWORK"] = "error"
-    os.environ["JAM_LOG_LEVEL_PVM"] = "critical"
+if "JAM_LOG_LEVEL_PVM" not in os.environ:
+    os.environ["JAM_LOG_LEVEL_PVM"] = "error"
 
 setup_logging("default", "test")
 
