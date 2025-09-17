@@ -5,7 +5,7 @@ import os
 import sys
 from pathlib import Path
 
-from jam.logging import setup_logging
+from jam.log_setup import setup_logging
 
 # Add tsr-py directory to path for imports if running from tessera-test-suites
 if 'tessera-test-suites' in os.getcwd():

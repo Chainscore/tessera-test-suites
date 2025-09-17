@@ -9,7 +9,7 @@ from jam.types import Beta, Eta, Gamma, Pi
 
 from tsrkit_types import Bytes
 
-from jam.logging import logger, setup_logging
+from jam.log_setup import logger, setup_logging
 from jam.state.state import State, setup_state, set_state
 from jam.block.block import Block
 

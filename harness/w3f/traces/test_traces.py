@@ -8,7 +8,7 @@ from jam.settings import setup_setting
 import pytest
 from tsrkit_types import Bytes
 
-from jam.logging import logger, setup_logging
+from jam.log_setup import logger, setup_logging
 from jam.state.ghost import GhostState
 from jam.state.state import setup_state
 from rockstore import RockStore
