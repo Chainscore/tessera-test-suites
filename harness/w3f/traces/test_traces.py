@@ -25,15 +25,15 @@ def fetch_vectors(module: str, pattern: str):
 
 os.environ["LOG_LEVEL_HOST_CALLS"] = "debug"
 
-setup_logging("default", "test-traces")
+setup_logging("gruvbox", "test-traces")
 
 @pytest.mark.asyncio
-async def test_traces(module, pattern, db_path):
+async def test_traces(module, pattern, db_path, rpc):
     db_path = db_path
     for name, vector in fetch_vectors(module, pattern):
         print(f"\n ⏭️Running test case {name} ...")
 
-        settings = setup_setting(db_path + "/" + name + "/", 1)
+        settings = setup_setting(db_path + "/" + name + "/", 1, "alice", 0, rpc)
         db = RockStore(db_path + "/" + name)
         post_db = RockStore(db_path + "/" + name + "/post")
 

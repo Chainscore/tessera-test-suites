@@ -37,7 +37,7 @@ async def test_traces(db_path):
     from jam.settings import setup_setting
     settings = setup_setting(db_path, 1)
     
-    module = "storage"
+    module = "safrole"
 
     counter = 0
     start_block = 1
@@ -56,7 +56,7 @@ async def test_traces(db_path):
     
     0-100: 60+s -> 42.92s -> 30s -> 24.36s -> 22.57s
     """
-    inspect = 1
+    inspect = 0
     if inspect:
         start_block = 4
         n_blocks = 1
@@ -95,9 +95,9 @@ async def test_traces(db_path):
         
         if w_profiler:
             with Profiler("block transition", limit=100):
-                state.transition(block)
+                state._force_transition(block)
         else:
-            state.transition(block)
+            state._force_transition(block)
             
         end_time = time.perf_counter()
         logger.info(f"Transition took {(1000 * (end_time - start_time)):.2f} ms")

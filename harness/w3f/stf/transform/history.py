@@ -1,7 +1,5 @@
-from pathlib import Path
 from typing import Dict, Tuple
 
-from jam.state.ghost import GhostState
 from jam.state.state import State
 from jam.state.utils import construct_state_key
 from jam.types import OpaqueHash
@@ -11,7 +9,6 @@ from jam.types.state.sigma import Sigma
 from jam.types.state.beta import Beta
 from jam.state.transitions import RecentHistory
 from jam.utils.dummy.dummy_extrinsics import create_dummy_work_report
-from sympy.core.assumptions_generated import beta_rules
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):

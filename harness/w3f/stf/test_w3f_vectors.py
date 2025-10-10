@@ -37,8 +37,10 @@ def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_comp
         # expected + actual post-states
         post_expect = tstate(vector["post_state"])
         transition(state.load(), state, input_block, **args)
-        
-        state.store.save_n_clear_cache()
+
+        # Apply changes to State Trie
+        state.store.record_cache()
+        state.store.settle_cache()
 
         if vector["output"]:
             assert vector["output"].get("err") is None
@@ -56,11 +58,11 @@ def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_comp
 
 
 @pytest.mark.asyncio
-async def test_stf_vectors(module, spec, pattern):
+async def test_stf_vectors(module, spec, pattern, rpc):
     tblock, tstate, transition, compare_state = load_stf_module(module)
     for name, vector in fetch_vectors(module, spec, pattern):
         print(f"\n ⏭️ Running test case {name} ...")
-        settings = setup_setting(f"data/tmp/{name}/", 1) 
+        settings = setup_setting(f"data/tmp/{name}/", 1, "alice", 3000, rpc)
         run_case(name, vector, tblock, tstate, transition, compare_state, settings)
         print("✅ Passed")
         if Path("data/tmp").exists():

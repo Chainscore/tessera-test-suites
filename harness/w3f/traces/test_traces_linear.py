@@ -2,15 +2,13 @@ import json
 from jam.state.utils import construct_state_key
 from jam.types.state.delta import AccountMetadata
 import pytest
-import os
 from pathlib import Path
 
-from jam.types import Beta, Eta, Gamma, Pi
+from jam.types import Beta, Gamma, Pi, Kappa
 
 from tsrkit_types import Bytes
 
 from jam.log_setup import logger, setup_logging
-from jam.state.state import State, setup_state, set_state
 from jam.block.block import Block
 
 TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy"
@@ -22,25 +20,26 @@ def fetch_vector(module: str, pattern: str):
         for f in vector_dir.glob(pattern.replace('"', '').replace("'", ""))
     ]
 
-setup_logging("default", "test-linear-traces")
+setup_logging("dracula", "test-linear-traces")
 
 @pytest.mark.asyncio
-async def test_traces(module, pattern, db_path):
+async def test_traces(module, pattern, db_path, rpc):
     db_path = db_path
     block_n = 1
 
     from jam.state.state import state as _state
     state = _state
 
+    from jam.state.state import setup_state
     from jam.settings import setup_setting
-    settings = setup_setting(db_path, 1)
+    settings = setup_setting(db_path, 1, "alice", 0, rpc)
 
     while True:
         try:
-            name, vector = fetch_vector(module, f"{"".join(["0" for _ in range(8 - len(str(block_n)))])}{block_n}.json")[0]
+            name, vector = fetch_vector(module, f"{''.join(['0' for _ in range(8 - len(str(block_n)))])}{block_n}.json")[0]
             print(f"\n ⏭️Running test case {name} ...")
         except IndexError as e:
-            print("Finished!", f"{"".join(["0" for _ in range(8 - len(str(block_n)))])}{block_n}.json", "not found.")
+            print("Finished!", f"{''.join(['0' for _ in range(8 - len(str(block_n)))])}{block_n}.json", "not found.")
             break 
 
         if block_n == 1:
@@ -53,7 +52,7 @@ async def test_traces(module, pattern, db_path):
         pre_gamma = state.gamma
 
         logger.info("Starting transition...")
-        state.transition(block)
+        state._force_transition(block)
 
         from deepdiff import DeepDiff
 

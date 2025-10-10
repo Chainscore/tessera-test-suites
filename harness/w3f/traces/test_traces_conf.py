@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 import shutil
 from time import time
@@ -13,7 +12,6 @@ from jam.log_setup import logger, setup_logging
 from jam.state.state import setup_state
 from rockstore import RockStore
 from jam.block.block import Block
-from jam.types.state.rho import Rho
 
 TRACE_ROOT = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.0" / "traces"
 
@@ -61,10 +59,10 @@ def fetch_vectors(module: str, pattern: str):
 
 
 @pytest.mark.asyncio
-async def test_traces(module, pattern, db_path):
+async def test_traces(module, pattern, db_path, rpc):
     db_path = db_path
     
-    setup_logging(theme="default", environment="testing")
+    setup_logging(theme="gruvbox", node_name="test")
     
     for name, vector in fetch_vectors(module, pattern):
         print(f"\n ⏭️Running test case {name} ...")
@@ -73,7 +71,7 @@ async def test_traces(module, pattern, db_path):
         
         
         t = time()
-        settings = setup_setting(data_path=f"data/tmp/{t}/main")
+        settings = setup_setting(data_path=f"data/tmp/{t}/main", rpc_flag=rpc)
         
         db = RockStore(f"data/tmp/{t}/main")
         post_db = RockStore(f"data/tmp/{t}/post")
