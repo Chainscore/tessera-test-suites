@@ -91,7 +91,7 @@ async def test_traces(module, pattern, db_path, rpc):
         PRE_BETA = state.beta
         PRE_RHO = state.rho
         
-        state.transition(block)
+        state._force_transition(block)
         from deepdiff import DeepDiff
         
         post_data = {Bytes.from_json(keyval["key"]): Bytes.from_json(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
