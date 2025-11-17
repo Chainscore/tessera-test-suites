@@ -1,5 +1,5 @@
 from typing import Tuple
-from harness.w3f.stf.types import InputAccounts
+from ..types import InputAccounts
 from jam.state.state import State
 from jam.state.transitions import Accumulation
 from jam.block.block import Block

@@ -85,17 +85,22 @@ async def test_traces(module, pattern, db_path, rpc):
 
         pre_data = {Bytes.from_json(keyval["key"]):Bytes.from_json(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}
         state = setup_state(db, pre_data)
+        print("SETUP STATE ROOT", state.root.hex())
 
         logger.info("Starting transition...", len_state=len(pre_data))
         PRE_PI = state.pi
         PRE_BETA = state.beta
         PRE_RHO = state.rho
-        
-        state._force_transition(block)
+
+        state.transition(block, False)
+        state.settle(block.header.hash())
+        print("TRANSITIONED STATE ROOT", state.root.hex(), state.store._updates)
+
         from deepdiff import DeepDiff
         
         post_data = {Bytes.from_json(keyval["key"]): Bytes.from_json(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
         post_state = setup_state(post_db, post_data)
+        print("POST STATE ROOT", post_state.root.hex())
 
         if post_state.pi != state.pi:
             print("MISMATCHED PI")
@@ -117,5 +122,6 @@ async def test_traces(module, pattern, db_path, rpc):
                 print("NEW KEY", k, v)
             elif v != actual[k]:
                 print("DIFF: ", k, "\nEXP \t", v, "\nACT \t", actual[k], "\nPRE \t", pre_data[Bytes.fromhex(k)].hex() if Bytes.fromhex(k) in pre_data else None)
+        assert state.root == post_state.root
         assert state.root.hex() == vector["post_state"]["state_root"][2:]
         print("✅Passed")
