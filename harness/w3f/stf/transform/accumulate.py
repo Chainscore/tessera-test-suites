@@ -1,4 +1,10 @@
 from typing import Tuple
+
+from jam.settings import Settings
+from jam.types import AuthorizationQueue, OpaqueHash, Phi, Iota, ValidatorData, ValidatorMetadata, BandersnatchPublic, \
+    Ed25519Public, BlsPublic
+from jam.utils.constants import MAX_AUTH_QUEUE_ITEMS, CORE_COUNT, VALIDATOR_COUNT
+from jam.utils.dummy.utils import create_dummy_bytes32, create_dummy_bytes
 from ..types import InputAccounts
 from jam.state.state import State
 from jam.state.transitions import Accumulation
@@ -24,6 +30,13 @@ def transform_block(vector_input: dict) -> (Block, dict):
 def transform_state(vector_state: dict) -> dict[bytes, bytes]:
     state = {}
     state[construct_state_key(11)] = Tau.from_json(vector_state["slot"]).encode()
+
+    # Phi - Authorization queue
+    queue = AuthorizationQueue(
+        [OpaqueHash(create_dummy_bytes32()) for _ in range(MAX_AUTH_QUEUE_ITEMS)]
+    )
+    state[construct_state_key(2)] = Phi([queue for _ in range(CORE_COUNT)]).encode()
+
     state[construct_state_key(6)] = Eta.from_json(
         [
             vector_state["entropy"],
@@ -32,6 +45,21 @@ def transform_state(vector_state: dict) -> dict[bytes, bytes]:
             "0x" + bytes(32).hex(),
         ]
     ).encode()
+
+    # Create dummy validator data
+    key_set = [Settings(data_path=None, seed=i) for i in range(VALIDATOR_COUNT)]
+    dummy_validator_data = [
+        ValidatorData(
+            bandersnatch=BandersnatchPublic(key.bandersnatch_public),
+            ed25519=Ed25519Public(key.ed25519_public),
+            bls=BlsPublic(create_dummy_bytes(144)),
+            metadata=ValidatorMetadata.from_json(bytes(128).hex()),
+        )
+        for key in key_set
+    ]
+
+    state[construct_state_key(7)] = Iota(dummy_validator_data).encode()
+
     state[construct_state_key(12)] = Chi.from_json(vector_state["privileges"]).encode()
     services_stats = AllServiceStats.from_json(vector_state["statistics"])
     state[construct_state_key(13)] = Pi(
@@ -57,6 +85,8 @@ def subset_to_compare(state: Sigma) -> Tuple:
         data = {k.hex(): v.hex() for k, v in state.store._DB.get_all().items()}
     else:
         data = state
+    data[construct_state_key(7).hex()] = bytes(32).hex()
+    data[construct_state_key(2).hex()] = bytes(32).hex()
     data[construct_state_key(16).hex()] = bytes(32).hex()
     data[construct_state_key(13).hex()] = bytes(32).hex()
     return data

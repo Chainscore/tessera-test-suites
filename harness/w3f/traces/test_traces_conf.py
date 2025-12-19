@@ -98,10 +98,10 @@ async def test_traces(module, pattern, db_path, rpc):
     for name, vector in fetch_vectors(module, pattern):
         module_id = name.split("_")[0]
         count += 1
-        if name not in FAILURES:
-            # print(">>Skipped", name)
-            skipped += 1
-            continue
+        # if name not in FAILURES:
+        #     # print(">>Skipped", name)
+        #     skipped += 1
+        #     continue
 
         print(f"\n ⏭️Running test case {name} ...")
         if Path("data/tmp").exists():
@@ -129,26 +129,19 @@ async def test_traces(module, pattern, db_path, rpc):
 
         pre_data = {Bytes.from_json(keyval["key"]):Bytes.from_json(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}
         state = setup_state(db, pre_data)
-        print("SETUP STATE ROOT", state.root.hex())
 
         logger.info("Starting transition...", len_state=len(pre_data))
         PRE_PI = state.pi
         PRE_BETA = state.beta
         PRE_RHO = state.rho
 
-        # try:
         state.transition(block, False)
         state.settle(block.header.hash())
-        print("TRANSITIONED STATE ROOT", state.root.hex(), state.store._updates)
-        # except Exception as e:
-        #     failed.append((name, str(e)))
-        #     print("STATE TRANSITION ERROR OCCURRED", e)
 
         from deepdiff import DeepDiff
         
         post_data = {Bytes.from_json(keyval["key"]): Bytes.from_json(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
         post_state = setup_state(post_db, post_data)
-        print("POST STATE ROOT", post_state.root.hex())
 
         try:
             if post_state.pi != state.pi:
@@ -187,5 +180,3 @@ async def test_traces(module, pattern, db_path, rpc):
 
     print("\n\n\n")
     print("TOTAL : ", count, "  PASSED : ", passed, "  FAILED : ", fail, " RETIRED : ", retired, " SKIPPED : ", skipped)
-    # for k in failed:
-    #     print(k[0], "Error : ", k[1], "\n")

@@ -6,6 +6,7 @@ import pytest
 from jam.error import JamError
 from jam.settings import setup_setting
 from jam.state.state import setup_state
+from jam.types import ServiceId
 
 STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy" / "stf"
 
