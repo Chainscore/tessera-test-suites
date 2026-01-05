@@ -1,12 +1,9 @@
-from typing import Self
-
-from jam.types import LookupTable, BlobLength
-from tsrkit_types import structure, Uint, Dictionary, Bytes, TypedBoundedVector
+from tsrkit_types import structure, Uint, Dictionary, TypedBoundedVector
 
 from jam.types.protocol.core import Gas, ServiceId
-from jam.types.protocol.crypto import OpaqueHash, Hash
-from jam.types.state.delta import AccountPreimages, AccountStorage, Delta, AccountData as AD, AccountPreimages, \
-	AccountMetadata, AccountLookup, ServiceCodeHash
+from jam.types.protocol.crypto import OpaqueHash
+from jam.types.state.delta import AccountStorage, Delta, AccountData as AD, AccountPreimages, \
+	AccountMetadata, AccountLookup
 
 
 @structure
@@ -26,20 +23,12 @@ class Service:
 Timestamps = TypedBoundedVector[Uint[32], 0, 3]
 
 
-class PreimageStatus(Dictionary[ServiceCodeHash, Timestamps, "hash", "status"]):
-
-	def to_lookup(self) -> "AccountLookup":
-		lookup = AccountLookup({})
-		for h, status in self.items():
-			lookup[LookupTable(hash=h, length=BlobLength(32))] = status
-		return lookup
-
 @structure
 class AccountData:
 		service: Service
 		storage: AccountStorage
-		preimages_blob: AccountPreimages
-		preimages_status: PreimageStatus
+		preimage_blobs: AccountPreimages
+		preimage_requests: AccountLookup
 
 class InputAccounts(Dictionary[ServiceId, AccountData, "id", "data"]):
 	def to_delta(self) -> Delta:
@@ -60,8 +49,8 @@ class InputAccounts(Dictionary[ServiceId, AccountData, "id", "data"]):
 					parent_service=val.service.parent_service
 				),
 				storage=val.storage,
-				preimages=val.preimages_blob,
-				lookup=val.preimages_status.to_lookup()
+				preimages=val.preimage_blobs,
+				lookup=val.preimage_requests
 			)
 		return delta
 
