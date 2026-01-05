@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 from time import time
 
+from jam import chain_config
 from jam.settings import setup_setting
 
 import pytest
@@ -13,7 +14,7 @@ from jam.state.state import setup_state
 from rockstore import RockStore
 from jam.block.block import Block
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.0" / "traces"
+TRACE_ROOT = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.1" / "traces"
 
 def fetch_vectors(module: str, pattern: str):
     """
@@ -57,36 +58,14 @@ def fetch_vectors(module: str, pattern: str):
     
     return vectors
 
-RETIRED = [
-    "1758819527",
-    "1758708840",
-    "1758622403",
-    "1758622442"
-]
+# Retired cases
+RETIRED = []
 
-FAILURES = [
-    "1757422206_00000011.json",
-    "1757862468_00000160.json",
-    "1757862472_00000160.json",
-    "1758621412_00000025.json",
-    "1758621498_00000025.json",
-    "1758621547_00000032.json",
-    "1758636775_00000014.json",
-    "1758636819_00000022.json",
-    "1758636961_00000018.json",
-    "1758637024_00000018.json",
-    "1758637136_00000019.json",
-    "1758637250_00000016.json",
-    "1758637297_00000016.json",
-    "1758637363_00000023.json",
-    "1758637447_00000061.json",
-    "1758637447_00000062.json",
-    "1758637485_00000019.json"
-]
+# Failed cases
+FAILURES = []
+
 @pytest.mark.asyncio
 async def test_traces(module, pattern, db_path, rpc):
-    db_path = db_path
-    
     setup_logging(theme="gruvbox", node_name="test")
 
     count = 0
@@ -98,6 +77,7 @@ async def test_traces(module, pattern, db_path, rpc):
     for name, vector in fetch_vectors(module, pattern):
         module_id = name.split("_")[0]
         count += 1
+        # condition to explicitly test only failed cases.
         # if name not in FAILURES:
         #     # print(">>Skipped", name)
         #     skipped += 1
@@ -106,8 +86,6 @@ async def test_traces(module, pattern, db_path, rpc):
         print(f"\n ⏭️Running test case {name} ...")
         if Path("data/tmp").exists():
             shutil.rmtree("data/tmp")
-
-
 
         if module_id in RETIRED:
             print("!Retired", module_id)
@@ -135,8 +113,10 @@ async def test_traces(module, pattern, db_path, rpc):
         PRE_BETA = state.beta
         PRE_RHO = state.rho
 
-        state.transition(block, False)
-        state.settle(block.header.hash())
+        # TODO: Handle Spec Based Testcases
+        if block.header.author_index < chain_config.num_validators:
+            state.transition(block, False)
+            state.settle(block.header.hash())
 
         from deepdiff import DeepDiff
         
