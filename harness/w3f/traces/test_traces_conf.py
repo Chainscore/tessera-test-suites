@@ -14,7 +14,7 @@ from jam.state.state import setup_state
 from rockstore import RockStore
 from jam.block.block import Block
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.1" / "traces"
+TRACE_ROOT = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.2" / "traces"
 
 def fetch_vectors(module: str, pattern: str):
     """
