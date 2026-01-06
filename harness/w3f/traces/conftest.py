@@ -1,9 +1,12 @@
 import os
 from pathlib import Path
+import shutil
+import tempfile
+import pytest
 
 def get_all_modules():
-    transform_dir = Path(__file__).parents[3] / "ext" / "w3f-w-traces" / "traces"
-    return [f.stem for f in transform_dir.glob("*.py") if f.name != "__init__.py"]
+    transform_dir = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.2" / "traces"
+    return [d.name for d in transform_dir.iterdir() if d.is_dir()]
 
 def pytest_addoption(parser):
     parser.addoption("--module", action="store", default=None,
@@ -22,3 +25,14 @@ def pytest_generate_tests(metafunc):
     pattern = metafunc.config.getoption("pattern")
     params = [(m,pattern) for m in modules]
     metafunc.parametrize("module,pattern", params)
+
+@pytest.fixture
+def db_path():
+    """Create a temporary directory for testing."""
+    temp_dir = tempfile.mkdtemp()
+    yield temp_dir
+    shutil.rmtree(temp_dir)
+
+@pytest.fixture
+def rpc(request):
+    return request.config.getoption("--no-rpc", default=True)
