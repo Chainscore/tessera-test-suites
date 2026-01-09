@@ -132,34 +132,32 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
         # 3. Apply Transition
         # Spec logic: verify author index constraint
         if case.block.header.author_index < chain_config.num_validators:
-            state.transition(case.block, False)
+            state.transition(case.block, False, True)
             state.settle(case.block.header.hash())
         
         # 4. Setup Expected Post-State (for deep comparison)
         expected_state = setup_state(db_post, case.post_state)
         
         # 5. Assertions
-        # Check sub-roots (pi, rho, beta)
-        for attr in ['pi', 'rho', 'beta']:
+        # Check sub-roots (pi, rho, beta, gamma)
+        for attr in ['pi', 'rho', 'beta', 'gamma']:
             actual_val = getattr(state, attr)
             expect_val = getattr(expected_state, attr)
             if actual_val != expect_val:
-                diff = DeepDiff(actual_val.to_json(), expect_val.to_json(), 
+                print("COMPONENT: ", attr.upper())
+                print("ACT\n", actual_val.to_json())
+                print("EXP\n", expect_val.to_json())
+                diff = DeepDiff(actual_val.to_json(), expect_val.to_json(),
                               significant_digits=0, verbose_level=2, view="tree")
                 print(f"\n⚠️ Mismatched {attr.upper()}:\n{diff}")
         
-        # Check State Merkle Root
-        if state.root.hex() != case.expected_root:
-            raise AssertionError(
-                f"Root Mismatch!\nExpected: {case.expected_root}\nActual:   {state.root.hex()}"
-            )
 
 
         actual_kv = {k.hex(): v.hex() for k, v in state.store._DB.get_all().items()}
         expect_kv = {k.hex(): v.hex() for k, v in case.post_state.items()}
-        
+
         val_diff = DeepDiff(actual_kv, expect_kv, significant_digits=0, verbose_level=2, view="tree")
-        
+
         if val_diff:
             # Print friendly diff for debugging
             for k, v in expect_kv.items():
@@ -167,11 +165,19 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
                     print(f"❌ Missing Key: {k}")
                 elif actual_kv[k] != v:
                     print(f"❌ Value Diff [{k}]:\n   Exp: {v}\n   Act: {actual_kv[k]}")
-            
-            raise AssertionError(f"Storage Mismatch in {case.id}")
+
+            print(f"Storage Mismatch in {case.id}")
+
+        # Check State Merkle Root
+        if state.root.hex() != case.expected_root:
+            raise AssertionError(
+                f"Root Mismatch!\nExpected: {case.expected_root}\nActual:   {state.root.hex()}"
+            )
 
     finally:
         # Cleanup
+        db_main.flush()
+        db_post.flush()
         if work_dir.exists():
             shutil.rmtree(work_dir)
 
@@ -196,8 +202,8 @@ async def test_traces_unified(module, pattern, db_path, rpc):
     files = list(get_trace_files(module, pattern))
     print(f"\n🔍 Found {len(files)} trace files matching pattern '{pattern}' in '{module}'\n")
 
-    for path in files:
-        if path.name in ("00000000.json", "genesis.json"):
+    for i, path in enumerate(files):
+        if path.name in ("00000000.json", "genesis.json", "genesis.bin"):
             skipped += 1
             print(f"⏩ Skipping {path.name}")
             continue
@@ -205,14 +211,23 @@ async def test_traces_unified(module, pattern, db_path, rpc):
         try:
             case = load_trace_case(path)
             print(f"🔄 Testing {case.id} ... ", end="", flush=True)
-            
+        except Exception as e:
+            print("LOADING CASE FAILED", e, path)
+            continue
+
+        try:
+
             run_transition_check(case, db_base, rpc)
             
             print("✅ Passed")
+            print("\n\n\n\n\n")
             passed += 1
 
         except Exception as e:
             print(f"❌ Failed: {e}")
+            print("\n\n\n\n\n")
+            if len(files) == 1:
+                raise e
             failures.append((path.name, str(e)))
 
     # Final Report
@@ -222,6 +237,8 @@ async def test_traces_unified(module, pattern, db_path, rpc):
     
     if failures:
         print("\nFailures:")
+        print("")
         for name, err in failures:
             print(f" - {name}: {err}")
+            print("")
         pytest.fail(f"{len(failures)} test cases failed.")

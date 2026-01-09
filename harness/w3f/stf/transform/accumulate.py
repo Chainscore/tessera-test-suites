@@ -93,7 +93,7 @@ def subset_to_compare(state: Sigma) -> Tuple:
 
 
 def transition(pre_state, state, block, **args):
-    state, c_map = Accumulation.transition(pre_state, state, block, **args)
     state.tau = block.header.slot
-    
+    state, c_map = Accumulation.transition(pre_state, state, block, **args)
+
     return state
