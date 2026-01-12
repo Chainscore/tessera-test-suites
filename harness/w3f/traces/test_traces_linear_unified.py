@@ -15,14 +15,30 @@ from jam.log_setup import setup_logging
 from jam.state.state import setup_state
 from rockstore import RockStore
 from jam.block.block import Block
-from tsrkit_types import Bytes
+from tsrkit_types import Bytes, structure, TypedVector
 
 # Trace type definitions
 from .trace import Trace
 
+TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy" / "traces"
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.2" / "traces"
+@structure
+class KeyVal:
+    key: Bytes[31]
+    value: Bytes
 
+
+@structure
+class StateKeyVals:
+    state_root: Bytes[32]
+    keyvals: TypedVector[KeyVal]
+
+
+@structure
+class Trace:
+    pre_state: StateKeyVals
+    block: Block
+    post_state: StateKeyVals
 
 class TraceCase(NamedTuple):
     """Normalized trace test case data."""
@@ -44,7 +60,7 @@ def load_trace_case(path: Path) -> TraceCase:
     if path.suffix == ".bin":
         # Decode binary trace using structured types
         trace = Trace.decode(path.read_bytes())
-        
+
         return TraceCase(
             id=case_id,
             file_path=path,
@@ -60,18 +76,18 @@ def load_trace_case(path: Path) -> TraceCase:
             data = json.load(f)
 
         if not all(k in data for k in ['pre_state', 'post_state', 'block']):
-             raise ValueError("Invalid JSON trace structure: missing top-level keys")
+            raise ValueError("Invalid JSON trace structure: missing top-level keys")
 
         return TraceCase(
             id=case_id,
             file_path=path,
             pre_state={
-                Bytes.from_json(kv["key"]): Bytes.from_json(kv["value"]) 
+                Bytes.from_json(kv["key"]): Bytes.from_json(kv["value"])
                 for kv in data["pre_state"]["keyvals"]
             },
             block=Block.from_json(data["block"]),
             post_state={
-                Bytes.from_json(kv["key"]): Bytes.from_json(kv["value"]) 
+                Bytes.from_json(kv["key"]): Bytes.from_json(kv["value"])
                 for kv in data["post_state"]["keyvals"]
             },
             expected_root=data["post_state"]["state_root"].replace("0x", "")
@@ -89,7 +105,7 @@ def get_trace_files(module: str, pattern: str) -> Iterator[Path]:
     # Clean input
     mod_filter = module.strip('"\'')
     pat_filter = pattern.strip('"\'')
-    
+
     # Define search scope
     if pat_filter == "all":
         candidates = TRACE_ROOT.rglob("*")
@@ -117,27 +133,27 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
     """
     # 1. Setup isolated environment
     # Use explicit timestamp to avoid collision if running fast cycles
-    env_id = f"{int(time() * 1000000)}" 
+    env_id = f"{int(time() * 1000000)}"
     work_dir = Path(db_path_base) / env_id
-    
+
     setup_setting(data_path=str(work_dir / "main"), rpc_flag=rpc)
-    
+
     db_main = RockStore(str(work_dir / "main"))
     db_post = RockStore(str(work_dir / "post"))
 
     try:
         # 2. Setup Pre-State
         state = setup_state(db_main, case.pre_state)
-        
+
         # 3. Apply Transition
         # Spec logic: verify author index constraint
         # if case.block.header.author_index < chain_config.num_validators:
         state.transition(case.block, False, True)
         state.settle(case.block.header.hash())
-        
+
         # 4. Setup Expected Post-State (for deep comparison)
         expected_state = setup_state(db_post, case.post_state)
-        
+
         # 5. Assertions
         # Check sub-roots (pi, rho, beta, gamma)
         for attr in ['pi', 'rho', 'beta', 'gamma']:
@@ -148,10 +164,8 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
                 print("ACT\n", actual_val.to_json())
                 print("EXP\n", expect_val.to_json())
                 diff = DeepDiff(actual_val.to_json(), expect_val.to_json(),
-                              significant_digits=0, verbose_level=2, view="tree")
+                                significant_digits=0, verbose_level=2, view="tree")
                 print(f"\n⚠️ Mismatched {attr.upper()}:\n{diff}")
-        
-
 
         actual_kv = {k.hex(): v.hex() for k, v in state.store._DB.get_all().items()}
         expect_kv = {k.hex(): v.hex() for k, v in case.post_state.items()}
@@ -176,7 +190,7 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
 
     finally:
         # Cleanup
-        # db_main.flush()
+        db_main.flush()
         if work_dir.exists():
             shutil.rmtree(work_dir)
 
@@ -188,15 +202,15 @@ async def test_traces_unified(module, pattern, db_path, rpc):
     Parses both .bin and .json files dynamically.
     """
     setup_logging(theme="gruvbox", node_name="test")
-    
+
     db_base = db_path or "data/tmp"
     if Path(db_base).exists():
         shutil.rmtree(db_base)
-    
+
     failures = []
     skipped = 0
     passed = 0
-    
+
     # Discovery
     files = list(get_trace_files(module, pattern))
     print(f"\n🔍 Found {len(files)} trace files matching pattern '{pattern}' in '{module}'\n")
@@ -217,7 +231,7 @@ async def test_traces_unified(module, pattern, db_path, rpc):
         try:
 
             run_transition_check(case, db_base, rpc)
-            
+
             print("✅ Passed")
             print("\n\n\n\n\n")
             passed += 1
@@ -230,10 +244,10 @@ async def test_traces_unified(module, pattern, db_path, rpc):
             failures.append((path.name, str(e)))
 
     # Final Report
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print(f"PASSED: {passed} | FAILED: {len(failures)} | SKIPPED: {skipped}")
-    print("="*50)
-    
+    print("=" * 50)
+
     if failures:
         print("\nFailures:")
         print("")
