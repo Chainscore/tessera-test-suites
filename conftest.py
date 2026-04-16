@@ -5,6 +5,8 @@ import os
 import sys
 from pathlib import Path
 
+from jam.log_setup import setup_logging
+
 # Add tsr-py directory to path for imports if running from tessera-test-suites
 if 'tessera-test-suites' in os.getcwd():
     tsr_py_path = Path(os.getcwd()).parent / 'tessera'
@@ -12,14 +14,18 @@ if 'tessera-test-suites' in os.getcwd():
         sys.path.insert(0, str(tsr_py_path))
 
 # Set up logging environment variables if not already set
-if "LOG_LEVEL" not in os.environ:
-    os.environ["LOG_LEVEL"] = "debug"
-    os.environ["LOG_LEVEL_IMPORT"] = "error"
-    os.environ["LOG_LEVEL_AUTHOR"] = "error"
-    os.environ["LOG_LEVEL_NETWORK"] = "error"
-    os.environ["LOG_LEVEL_PVM"] = "error"
-    os.environ["LOG_LEVEL_HOST_CALLS"] = "debug"
-    os.environ["LOG_LEVEL_IN_CORE"] = "error"
+if "JAM_LOG_LEVEL" not in os.environ:
+    os.environ["JAM_LOG_LEVEL"] = "error"
+if "JAM_LOG_LEVEL_BLOCK" not in os.environ:
+    os.environ["JAM_LOG_LEVEL_BLOCK"] = "error"
+if "JAM_LOG_LEVEL_NODE" not in os.environ:
+    os.environ["JAM_LOG_LEVEL_NODE"] = "error"
+if "JAM_LOG_LEVEL_NETWORK" not in os.environ:
+    os.environ["JAM_LOG_LEVEL_NETWORK"] = "error"
+if "JAM_LOG_LEVEL_PVM" not in os.environ:
+    os.environ["JAM_LOG_LEVEL_PVM"] = "error"
+
+setup_logging("default", "test")
 
 @pytest.fixture
 def db_path():
@@ -27,3 +33,16 @@ def db_path():
     temp_dir = tempfile.mkdtemp()
     yield temp_dir
     shutil.rmtree(temp_dir)
+
+def pytest_addoption(parser):
+    # boolean flag: present -> True
+    parser.addoption(
+        "--no-rpc",
+        action="store_false",
+        default=True,
+        help="Flag for turning rpc off"
+    )
+
+@pytest.fixture
+def rpc(request):
+    return request.config.getoption("--no-rpc")

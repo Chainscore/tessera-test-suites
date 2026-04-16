@@ -2,10 +2,6 @@
 	path = ext/w3f
 	url = https://github.com/w3f/jamtestvectors
 	branch = master
-[submodule "ext/jamduna"]
-	path = ext/jamduna
-	url = https://github.com/jam-duna/jamtestnet
-	branch = main
 [submodule "ext/pvm-koute"]
 	path = ext/pvm-koute
 	url = https://github.com/koute/jamtestvectors.git
@@ -18,3 +14,6 @@
 	path = ext/w3f-davxy
 	url = https://github.com/davxy/jam-test-vectors
 	branch = master
+[submodule "ext/jam-conformance"]
+	path = ext/jam-conformance
+	url = https://github.com/davxy/jam-conformance.git

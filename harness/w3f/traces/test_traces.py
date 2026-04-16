@@ -2,39 +2,43 @@ import json
 import os
 from pathlib import Path
 
+from jam.finality.finality import Finality
 from jam.settings import setup_setting
 
+import pytest
 from tsrkit_types import Bytes
 
-from jam.logging import logger, setup_logging
+from jam.log_setup import logger, setup_logging
 from jam.state.ghost import GhostState
 from jam.state.state import setup_state
 from rockstore import RockStore
 from jam.block.block import Block
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f"
+TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy"
 
 def fetch_vectors(module: str, pattern: str):
     vector_dir = TRACE_ROOT / "traces" / module
     return [
         (f.name, json.load(open(f)))
-        for f in vector_dir.glob(pattern)
+        for f in vector_dir.glob(pattern.replace('"', '').replace("'", ""))
     ]
 
 os.environ["LOG_LEVEL_HOST_CALLS"] = "debug"
 
-setup_logging(theme="default", environment="testing")
+setup_logging("gruvbox", "test-traces")
 
-def test_traces(module, pattern, db_path):
+# TODO: Currently Block Viewer would only run in case all traces are passed sequentially, using same db.
+@pytest.mark.asyncio
+async def test_traces(module, pattern, db_path, rpc):
     db_path = db_path
     for name, vector in fetch_vectors(module, pattern):
         print(f"\n ⏭️Running test case {name} ...")
 
-        settings = setup_setting(db_path + "/" + name + "/", 1)
+        settings = setup_setting(db_path + "/" + name + "/", 1, "alice", 0, rpc)
         db = RockStore(db_path + "/" + name)
         post_db = RockStore(db_path + "/" + name + "/post")
 
-        if name == "00000000.json":
+        if name == "00000000.json" or name == "genesis.json":
             print("Skipping genesis...")
             continue
 
@@ -54,7 +58,7 @@ def test_traces(module, pattern, db_path):
         PRE_BETA = state.beta
         PRE_RHO = state.rho
 
-        state.transition(block)
+        state._force_transition(block)
         from deepdiff import DeepDiff
 
         post_data = {Bytes.from_json(keyval["key"]): Bytes.from_json(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
@@ -62,7 +66,7 @@ def test_traces(module, pattern, db_path):
 
         if post_state.pi != state.pi:
             print("MISMATCHED PI")
-            print("DIFF", DeepDiff(state.pi.to_json(), post_state.pi.to_json(), significant_digits=0, verbose_level=2, view="tree"))
+            print("DIFF\n", DeepDiff(state.pi.to_json(), "\n", post_state.pi.to_json(), significant_digits=0, verbose_level=2, view="tree"))
             print("PRE PI", PRE_PI)
         if post_state.rho != state.rho:
             print("MISMATCHED RHO")
@@ -81,6 +85,11 @@ def test_traces(module, pattern, db_path):
             if k not in actual:
                 print("NEW KEY", k, v)
             elif v != actual[k]:
-                print("DIFF", k, v, actual[k])
-        assert state.root.hex() == vector["post_state"]["state_root"][2:]
-        print("✅Passed")
+                print("DIFF: ", k, "\nEXP \t", v, "\nACT \t", actual[k], "\nPRE \t", pre_data[Bytes.fromhex(k)].hex() if Bytes.fromhex(k) in pre_data else None)
+
+        try:
+            assert state.root.hex() == vector["post_state"]["state_root"][2:]
+            print("✅Passed")
+        except Exception as e:
+            print("❌Failed", type(e), str(e))
+

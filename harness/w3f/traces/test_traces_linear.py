@@ -1,13 +1,14 @@
 import json
-import os
+from jam.state.utils import construct_state_key
+from jam.types.state.delta import AccountMetadata
+import pytest
 from pathlib import Path
 
-from jam.types import Gamma
+from jam.types import Beta, Gamma, Pi, Kappa
 
 from tsrkit_types import Bytes
 
-from jam.logging import logger, setup_logging
-from jam.state.state import State, setup_state, set_state
+from jam.log_setup import logger, setup_logging
 from jam.block.block import Block
 
 TRACE_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy"
@@ -16,27 +17,29 @@ def fetch_vector(module: str, pattern: str):
     vector_dir = TRACE_ROOT / "traces" / module
     return [
         (f.name, json.load(open(f)))
-        for f in vector_dir.glob(pattern)
+        for f in vector_dir.glob(pattern.replace('"', '').replace("'", ""))
     ]
 
-setup_logging(theme="default", environment="testing")
+setup_logging("dracula", "test-linear-traces")
 
-def test_traces(module, db_path):
+@pytest.mark.asyncio
+async def test_traces(module, pattern, db_path, rpc):
     db_path = db_path
     block_n = 1
 
     from jam.state.state import state as _state
     state = _state
 
+    from jam.state.state import setup_state
     from jam.settings import setup_setting
-    settings = setup_setting(db_path, 1)
+    settings = setup_setting(db_path, 1, "alice", 0, rpc)
 
     while True:
         try:
-            name, vector = fetch_vector(module, f"{"".join(["0" for _ in range(8 - len(str(block_n)))])}{block_n}.json")[0]
+            name, vector = fetch_vector(module, f"{''.join(['0' for _ in range(8 - len(str(block_n)))])}{block_n}.json")[0]
             print(f"\n ⏭️Running test case {name} ...")
         except IndexError as e:
-            print("Finished!", f"{"".join(["0" for _ in range(8 - len(str(block_n)))])}{block_n}.json", "not found.")
+            print("Finished!", f"{''.join(['0' for _ in range(8 - len(str(block_n)))])}{block_n}.json", "not found.")
             break 
 
         if block_n == 1:
@@ -49,7 +52,7 @@ def test_traces(module, db_path):
         pre_gamma = state.gamma
 
         logger.info("Starting transition...")
-        state.transition(block)
+        state._force_transition(block)
 
         from deepdiff import DeepDiff
 
@@ -81,7 +84,19 @@ def test_traces(module, db_path):
             if k not in actual:
                 print("NEW KEY", k, v)
             elif v != actual[k]:
-                print("DIFF", Gamma.decode(bytes.fromhex(v)), Gamma.decode(bytes.fromhex(actual[k])))
+                cls_ = None
+
+                if k == construct_state_key(3).hex(): cls_ = Beta 
+                if k == construct_state_key(4).hex(): cls_ = Gamma 
+                if k == construct_state_key(13).hex(): cls_ = Pi
+                if k == construct_state_key((255, 0)).hex(): cls_ = AccountMetadata
+                if cls_: print(
+                    "Expected ---\n", 
+                    cls_.decode(bytes.fromhex(v)), 
+                    "\nActual ---\n", 
+                    cls_.decode(bytes.fromhex(actual[k]))
+                )
+                else: print("DIFF", k, v, actual[k])
         assert state.root.hex() == vector["post_state"]["state_root"][2:]
         print(f"✅Passed block: {block_n}")
         block_n += 1

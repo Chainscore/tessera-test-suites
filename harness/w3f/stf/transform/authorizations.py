@@ -1,4 +1,6 @@
+from pathlib import Path
 from typing import Dict, Tuple
+from jam.state.state import State
 from jam.state.transitions import Authorization
 
 from jam.state.ghost import GhostState
@@ -7,6 +9,7 @@ from jam.block.extrinsics.guarantees import (
     ReportGuarantee,
     ValidatorSignatures,
 )
+from jam.state.utils import construct_state_key
 from jam.types.state.phi import Phi
 from jam.types.state.alpha import Alpha
 from jam.types.protocol.core import CoreIndex, OpaqueHash
@@ -37,10 +40,10 @@ def transform_block(vector_input: dict) -> (Block, Dict):
 
 
 def transform_state(vector_state: dict) -> Sigma:
-    state = GhostState.genesis()
-    state.alpha = Alpha.from_json(vector_state["auth_pools"])
-    state.phi = Phi.from_json(vector_state["auth_queues"])
-    return state
+    state = {}
+    state[construct_state_key(1)] = Alpha.from_json(vector_state["auth_pools"]).encode()
+    state[construct_state_key(2)] = Phi.from_json(vector_state["auth_queues"]).encode()
+    return {key.hex(): value.hex() for key, value in state.items()}
 
 
 def subset_to_compare(state: Sigma) -> Tuple[Alpha,Phi]:
@@ -48,10 +51,11 @@ def subset_to_compare(state: Sigma) -> Tuple[Alpha,Phi]:
     Pull out only the fields we actually want to assert on
     (validator‐stats and slot in this example).
     """
-    return (
-        state.alpha,
-        state.phi,
-    )
+    if isinstance(state, State):
+        data = {k.hex(): v.hex() for k, v in state.store._DB.get_all().items()}
+    else:
+        data = state
+    return data
 
 
 transition = Authorization.transition

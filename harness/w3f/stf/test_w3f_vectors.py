@@ -1,19 +1,20 @@
 import json
 import importlib
-from copy import deepcopy
 from pathlib import Path
 import shutil
+import pytest
 from jam.error import JamError
 from jam.settings import setup_setting
 from jam.state.state import setup_state
+from jam.types import ServiceId
 
-STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f" / "stf"
+STF_ROOT = Path(__file__).parents[3] / "ext" / "w3f-davxy" / "stf"
 
 def fetch_vectors(module: str, spec: str, pattern: str):
     vector_dir = STF_ROOT / module / spec
     return [
         (f.name, json.load(open(f)))
-        for f in vector_dir.glob(pattern)
+        for f in vector_dir.glob(pattern.replace('"', '').replace("'", ""))
     ]
 
 def load_stf_module(module: str):
@@ -32,34 +33,38 @@ def run_case(name: str, vector: dict, tblock, tstate, transition, subset_to_comp
     input_block, args   = tblock(vector["input"])
     pre_state           = tstate(vector["pre_state"])
     
-    setup_state(settings.state_db, pre_state)
+    state = setup_state(settings.state_db, pre_state)
     try:
         # expected + actual post-states
         post_expect = tstate(vector["post_state"])
-        post_actual = transition(tstate(vector["pre_state"]), tstate(vector["pre_state"]), input_block, **args)
+        transition(state.load(), state, input_block, **args)
+
+        # Apply changes to State Trie
+        state.store.record_cache()
+        state.store.settle_cache()
 
         if vector["output"]:
             assert vector["output"].get("err") is None
+        
         # now just compare the *subset* of fields you actually care about
         expect_sub = subset_to_compare(post_expect)
-        actual_sub = subset_to_compare(post_actual)
-
+        actual_sub = subset_to_compare(state)
+        
         from deepdiff import DeepDiff
-        for ours, thiers in zip(expect_sub,actual_sub):
-            value_diff = DeepDiff(thiers.to_json(), ours.to_json(), significant_digits=0, verbose_level=2)
-            assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{value_diff.pretty()}"
-            # types_diff = DeepDiff(thiers, ours, significant_digits=0, verbose_level=2)
-            # assert value_diff == {}, f"\nValue Diff: {name}\nDiff:\n{types_diff.pretty()}"
+        diff = DeepDiff(actual_sub, expect_sub, significant_digits=0, verbose_level=1)
+        assert diff == {}
 
     except JamError as e:
         assert vector["output"].get("err") == e.code.value
 
-def test_stf_vectors(module, spec, pattern):
-    print("mod", module, spec, pattern)
+
+@pytest.mark.asyncio
+async def test_stf_vectors(module, spec, pattern, rpc):
     tblock, tstate, transition, compare_state = load_stf_module(module)
-    shutil.rmtree("data/tmp")
     for name, vector in fetch_vectors(module, spec, pattern):
         print(f"\n ⏭️ Running test case {name} ...")
-        settings = setup_setting(f"data/tmp/{name}/", 1) 
+        settings = setup_setting(f"data/tmp/{name}/", 1, "alice", 3000, rpc)
         run_case(name, vector, tblock, tstate, transition, compare_state, settings)
         print("✅ Passed")
+        if Path("data/tmp").exists():
+            shutil.rmtree("data/tmp")
