@@ -10,14 +10,15 @@ from jam.block.extrinsics.guarantees import (
     ValidatorSignatures,
 )
 from jam.state.utils import construct_state_key
-from jam.types.state.phi import Phi
-from jam.types.state.alpha import Alpha
-from jam.types.protocol.core import CoreIndex, OpaqueHash
+from jam.models.state.phi import Phi
+from jam.models.state.alpha import Alpha
+from jam.models.protocol.core import CoreIndex
+from jam.models.protocol.crypto import OpaqueHash
 
 from jam.block.block import Block
-from jam.types.state.sigma import Sigma
-from jam.types.state.tau import Tau
-from jam.types.work import WorkReport
+from jam.models.state.sigma import Sigma
+from jam.models.state.tau import Tau
+from jam.models.work import WorkReport
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):

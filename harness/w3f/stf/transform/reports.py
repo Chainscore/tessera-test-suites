@@ -1,33 +1,64 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import Dict, Tuple
 from jam.state.state import State
 from jam.state.transitions import Reporting
-from jam.state.ghost import GhostState
 from jam.block.block import Block
 from jam.state.utils import construct_state_key
-from jam.types.protocol.crypto import OpaqueHash, Hash
-from jam.types.protocol.core import TimeSlot
-from jam.types.state.alpha import Alpha
-from jam.types.state.beta import Beta
-from jam.types.state.delta import Delta
-from jam.types.state.eta import Eta
-from jam.types.state.gamma import Gamma, GammaP
-from jam.types.state.kappa import Kappa
-from jam.types.state.lambda_ import Lambda_
-from jam.types.state.omega import AllReadyWRs, Omega
-from jam.types.state.pi import AllCoreStats, AllServiceStats, AllValidatorStats, Pi
-from jam.types.state.psi import Psi, PsiB, PsiG, PsiO, PsiW
-from jam.types.state.sigma import Sigma
-from jam.types.state.rho import Rho
-from jam.types.state.tau import Tau
+from jam.models.protocol.crypto import OpaqueHash
+from jam.models.state.alpha import Alpha
+from jam.models.state.beta import Beta
+from jam.models.state.delta import Delta
+from jam.models.state.eta import Eta
+from jam.models.state.gamma import Gamma, GammaP
+from jam.models.state.kappa import Kappa
+from jam.models.state.lambda_ import Lambda_
+from jam.models.state.pi import AllCoreStats, AllServiceStats, AllValidatorStats, Pi
+from jam.models.state.psi import Psi, PsiB, PsiG, PsiO, PsiW
+from jam.models.state.sigma import Sigma
+from jam.models.state.rho import Rho
+from jam.models.state.tau import Tau
 from jam.block.extrinsics import GuaranteesExtrinsic
-from jam.types.state.xi import Xi
-from jam.types.work.report import WorkDependencies
-from jam.utils.constants import EPOCH_LENGTH
+
+
+def _normalize_report_dict(report: dict) -> None:
+    for result in report["results"]:
+        refine_load = result["refine_load"]
+        refine_load["exports"], refine_load["extrinsic_count"] = (
+            refine_load["extrinsic_count"],
+            refine_load["exports"],
+        )
+
+
+def _normalize_reports_vector_input(vector_input: dict) -> dict:
+    normalized = deepcopy(vector_input)
+    for guarantee in normalized["guarantees"]:
+        _normalize_report_dict(guarantee["report"])
+    return normalized
+
+
+def _normalize_reports_vector_state(vector_state: dict) -> dict:
+    normalized = deepcopy(vector_state)
+    for assignment in normalized["avail_assignments"]:
+        if assignment is not None:
+            _normalize_report_dict(assignment["report"])
+    for core_stat in normalized["cores_statistics"]:
+        core_stat["exports"], core_stat["extrinsic_count"] = (
+            core_stat["extrinsic_count"],
+            core_stat["exports"],
+        )
+    for service_stat in normalized["services_statistics"]:
+        record = service_stat["record"]
+        record["exports"], record["extrinsic_count"] = (
+            record["extrinsic_count"],
+            record["exports"],
+        )
+    return normalized
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):
+    vector_input = _normalize_reports_vector_input(vector_input)
     block = Block.genesis()
     block.header.slot = Tau(vector_input["slot"])
     block.extrinsic.guarantees = GuaranteesExtrinsic.from_json(
@@ -42,6 +73,7 @@ def transform_block(vector_input: dict) -> (Block, Dict):
 
 
 def transform_state(vector_state: dict) -> Sigma:
+    vector_state = _normalize_reports_vector_state(vector_state)
     dev_spec = json.load(open(Path(__file__).parents[4] / "dev-spec.json"))
     state = {bytes.fromhex(k):bytes.fromhex(v) for k, v in dev_spec["genesis_state"].items()}
 

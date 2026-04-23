@@ -2,11 +2,11 @@ from typing import Dict, Tuple
 
 from jam.state.state import State
 from jam.state.utils import construct_state_key
-from jam.types import OpaqueHash
+from jam.models.protocol.crypto import OpaqueHash
 from jam.block.block import Block
 from jam.block.extrinsics.guarantees import GuaranteesExtrinsic, ReportGuarantee, ValidatorSignatures
-from jam.types.state.sigma import Sigma
-from jam.types.state.beta import Beta
+from jam.models.state.sigma import Sigma
+from jam.models.state.beta import Beta
 from jam.state.transitions import RecentHistory
 from jam.utils.dummy.dummy_extrinsics import create_dummy_work_report
 

@@ -3,6 +3,7 @@ Dynamically handles both binary (.bin) and JSON (.json) trace files,
 running the appropriate decoding and testing logic based on file type.
 """
 import json
+import os
 import shutil
 from pathlib import Path
 from typing import Iterator, NamedTuple, Dict, Any, Union
@@ -22,6 +23,7 @@ from .trace import Trace
 
 
 TRACE_ROOT = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.2" / "traces"
+SHOW_FULL_TRACEBACK = os.environ.get("TRACE_HARNESS_TRACEBACK") == "1"
 
 
 class TraceCase(NamedTuple):
@@ -42,8 +44,14 @@ def load_trace_case(path: Path) -> TraceCase:
     case_id = f"{path.parent.name}_{path.stem}"
 
     if path.suffix == ".bin":
-        # Decode binary trace using structured types
-        trace = Trace.decode(path.read_bytes())
+        # Decode binary trace using structured types.
+        try:
+            trace = Trace.decode(path.read_bytes())
+        except Exception:
+            json_path = path.with_suffix(".json")
+            if json_path.exists():
+                return load_trace_case(json_path)
+            raise
         
         return TraceCase(
             id=case_id,
@@ -132,9 +140,11 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
         # 3. Apply Transition
         # Spec logic: verify author index constraint
         # if case.block.header.author_index < chain_config.num_validators:
+        print("PRE ROOT", state.root.hex())
         state.transition(case.block, False, True)
         state.settle(case.block.header.hash())
-        
+        print("POST ROOT", state.root.hex())
+
         # 4. Setup Expected Post-State (for deep comparison)
         expected_state = setup_state(db_post, case.post_state)
         
@@ -225,8 +235,11 @@ async def test_traces_unified(module, pattern, db_path, rpc):
         except Exception as e:
             print(f"❌ Failed: {e}")
             print("\n\n\n\n\n")
+            if SHOW_FULL_TRACEBACK:
+                import traceback
+                traceback.print_exc()
             if len(files) == 1:
-                raise e
+                pytest.fail(str(e), pytrace=False)
             failures.append((path.name, str(e)))
 
     # Final Report

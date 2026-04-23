@@ -6,15 +6,15 @@ from jam.state.ghost import GhostState
 from jam.block.block import Block
 from jam.block.extrinsics.tickets import TicketsExtrinsic
 from jam.state.utils import construct_state_key
-from jam.types.protocol.crypto import OpaqueHash
-from jam.types.state.eta import Eta
-from jam.types.state.gamma import Gamma
-from jam.types.state.iota import Iota
-from jam.types.state.kappa import Kappa
-from jam.types.state.lambda_ import Lambda_
-from jam.types.state.psi import Psi, PsiB, PsiG, PsiO, PsiW
-from jam.types.state.sigma import Sigma
-from jam.types.state.tau import Tau
+from jam.models.protocol.crypto import OpaqueHash
+from jam.models.state.eta import Eta
+from jam.models.state.gamma import Gamma
+from jam.models.state.iota import Iota
+from jam.models.state.kappa import Kappa
+from jam.models.state.lambda_ import Lambda_
+from jam.models.state.psi import Psi, PsiB, PsiG, PsiO, PsiW
+from jam.models.state.sigma import Sigma
+from jam.models.state.tau import Tau
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):

@@ -1,35 +1,26 @@
-from pathlib import Path
 from typing import List, Tuple, Dict
 
 
 from jam.state.state import State
 from jam.state.transitions import Disputes
-from jam.state.ghost import GhostState
 
-# from jam.state.state import GhostState, State
-# from jam.types import Boolean
 from jam.state.utils import construct_state_key
-from jam.types.state.rho import Rho
+from jam.models.state.rho import Rho
 from jam.block.block import Block
 
-# from tests.unit.disputes.types import (
-#     Input,
-#     PreState,
-#     Testcase,
-#     get_testcases_starting_with,
-# )j
-
-from jam.types.state.psi import Psi
-from jam.types.state.sigma import Sigma
-from jam.types.state.tau import Tau
-from jam.types.state.lambda_ import Lambda_
+from jam.models.state.psi import Psi
+from jam.models.state.sigma import Sigma
+from jam.models.state.tau import Tau
+from jam.models.state.lambda_ import Lambda_
 
 from jam.block.extrinsics.disputes import DisputesExtrinsic
+from jam.block.header.offenders_mark import OffendersMark
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):
     block = Block.genesis()
     block.extrinsic.disputes = DisputesExtrinsic.from_json(vector_input["disputes"])
+    block.header.offenders_mark = OffendersMark.produce(block.extrinsic.disputes)
     return block, {}
 
 

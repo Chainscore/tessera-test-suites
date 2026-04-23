@@ -4,13 +4,19 @@ from jam.state.ghost import GhostState
 from jam.block.block import Block
 from jam.state.state import State
 from jam.state.utils import construct_state_key
-from jam.types.state.delta import Delta
 from jam.state.transitions import Preimages
-from jam.types.state.pi import AllCoreStats, AllServiceStats, AllValidatorStats, Pi
-from jam.types.state.sigma import Sigma
-from harness.w3f.stf.types import InputAccounts
+from jam.models.protocol.core import ServiceId
+from jam.models.state.delta import (
+    AccountData,
+    AccountLookup,
+    AccountMetadata,
+    AccountPreimages,
+    Delta,
+)
+from jam.models.state.pi import AllCoreStats, AllServiceStats, AllValidatorStats, Pi
+from jam.models.state.sigma import Sigma
 from jam.block.extrinsics.preimages import PreimagesExtrinsic
-from jam.types.state.tau import Tau
+from jam.models.state.tau import Tau
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):
@@ -28,10 +34,18 @@ def transform_state(vector_state: dict) -> Sigma:
         vals_last=AllValidatorStats.empty(),
         cores=AllCoreStats.empty(),
         services=services_stats
-    ).encode()    
-    state.update(
-        Delta.from_json(vector_state["accounts"]).transform()
-    )
+    ).encode()
+
+    delta = Delta({})
+    for account in vector_state["accounts"]:
+        data = account["data"]
+        delta[ServiceId(account["id"])] = AccountData(
+            service=AccountMetadata.empty(),
+            preimages=AccountPreimages.from_json(data.get("preimage_blobs", [])),
+            lookup=AccountLookup.from_json(data.get("preimage_requests", [])),
+        )
+
+    state.update(delta.transform())
     return {key.hex(): value.hex() for key, value in state.items()}
 
 

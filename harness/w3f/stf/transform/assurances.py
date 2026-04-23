@@ -6,11 +6,11 @@ from jam.block.extrinsics.assurances import AssurancesExtrinsic
 from jam.state.state import State
 from jam.state.transitions import Assurances
 from jam.state.utils import construct_state_key
-from jam.types.protocol.crypto import HeaderHash
-from jam.types.state.kappa import Kappa
-from jam.types.state.rho import Rho
-from jam.types.state.sigma import Sigma
-from jam.types.state.tau import Tau
+from jam.models.protocol.crypto import HeaderHash
+from jam.models.state.kappa import Kappa
+from jam.models.state.rho import Rho
+from jam.models.state.sigma import Sigma
+from jam.models.state.tau import Tau
 
 
 def transform_block(vector_input: dict) -> (Block, Dict):

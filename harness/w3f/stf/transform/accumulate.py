@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from jam.settings import Settings
-from jam.types import AuthorizationQueue, OpaqueHash, Phi, Iota, ValidatorData, ValidatorMetadata, BandersnatchPublic, \
+from jam.models import AuthorizationQueue, OpaqueHash, Phi, Iota, ValidatorData, ValidatorMetadata, BandersnatchPublic, \
     Ed25519Public, BlsPublic
 from jam.utils.constants import MAX_AUTH_QUEUE_ITEMS, CORE_COUNT, VALIDATOR_COUNT
 from jam.utils.dummy.utils import create_dummy_bytes32, create_dummy_bytes
@@ -10,15 +10,15 @@ from jam.state.state import State
 from jam.state.transitions import Accumulation
 from jam.block.block import Block
 from jam.state.utils import construct_state_key
-from jam.types.protocol.core import TimeSlot
-from jam.types.state.chi import Chi
-from jam.types.state.eta import Eta
-from jam.types.state.omega import Omega
-from jam.types.state.pi import AllCoreStats, AllServiceStats, AllValidatorStats, Pi
-from jam.types.state.sigma import Sigma
-from jam.types.state.tau import Tau
-from jam.types.state.xi import Xi
-from jam.types.work import WorkReports
+from jam.models.protocol.core import TimeSlot
+from jam.models.state.chi import Chi
+from jam.models.state.eta import Eta
+from jam.models.state.omega import Omega
+from jam.models.state.pi import AllCoreStats, AllServiceStats, AllValidatorStats, Pi
+from jam.models.state.sigma import Sigma
+from jam.models.state.tau import Tau
+from jam.models.state.xi import Xi
+from jam.models.work import WorkReports
 
 
 def transform_block(vector_input: dict) -> (Block, dict):

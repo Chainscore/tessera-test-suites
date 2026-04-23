@@ -148,8 +148,10 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
         # 3. Apply Transition
         # Spec logic: verify author index constraint
         # if case.block.header.author_index < chain_config.num_validators:
+        print("PRE ROOT", state.root.hex())
         state.transition(case.block, False, True)
         state.settle(case.block.header.hash())
+        print("POST ROOT", state.root.hex())
 
         # 4. Setup Expected Post-State (for deep comparison)
         expected_state = setup_state(db_post, case.post_state)

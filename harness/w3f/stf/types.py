@@ -1,8 +1,8 @@
 from tsrkit_types import structure, Uint, Dictionary, TypedBoundedVector
 
-from jam.types.protocol.core import Gas, ServiceId
-from jam.types.protocol.crypto import OpaqueHash
-from jam.types.state.delta import AccountStorage, Delta, AccountData as AD, AccountPreimages, \
+from jam.models.protocol.core import Gas, ServiceId
+from jam.models.protocol.crypto import OpaqueHash
+from jam.models.state.delta import AccountStorage, Delta, AccountData as AD, AccountPreimages, \
 	AccountMetadata, AccountLookup
 
 
