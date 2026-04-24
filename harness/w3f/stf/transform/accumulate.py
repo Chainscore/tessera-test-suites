@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from jam.settings import Settings
+from jam.config import NodeConfig
 from jam.models import AuthorizationQueue, OpaqueHash, Phi, Iota, ValidatorData, ValidatorMetadata, BandersnatchPublic, \
     Ed25519Public, BlsPublic
 from jam.utils.constants import MAX_AUTH_QUEUE_ITEMS, CORE_COUNT, VALIDATOR_COUNT
@@ -47,7 +48,7 @@ def transform_state(vector_state: dict) -> dict[bytes, bytes]:
     ).encode()
 
     # Create dummy validator data
-    key_set = [Settings(data_path=None, seed=i) for i in range(VALIDATOR_COUNT)]
+    key_set = [Settings(NodeConfig(DATA_PATH=None, SEED=str(i))) for i in range(VALIDATOR_COUNT)]
     dummy_validator_data = [
         ValidatorData(
             bandersnatch=BandersnatchPublic(key.bandersnatch_public),

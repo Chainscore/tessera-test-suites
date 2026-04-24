@@ -14,7 +14,3 @@ dependencies = [
 [tool.uv.sources]
 tessera = { workspace = true }
 rockstore = { workspace = true }
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"

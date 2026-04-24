@@ -2,15 +2,12 @@ import json
 import os
 from pathlib import Path
 
-from jam.finality.finality import Finality
-from jam.settings import setup_setting
-
 import pytest
 from tsrkit_types import Bytes
 
 from jam.log_setup import logger, setup_logging
 from jam.state.ghost import GhostState
-from jam.state.state import setup_state
+from jam.state.state import State
 from rockstore import RockStore
 from jam.block.block import Block
 
@@ -29,14 +26,9 @@ setup_logging("gruvbox", "test-traces")
 
 # TODO: Currently Block Viewer would only run in case all traces are passed sequentially, using same db.
 @pytest.mark.asyncio
-async def test_traces(module, pattern, db_path, rpc):
-    db_path = db_path
+async def test_traces(module, pattern, db_path, rpc, jam_node):
     for name, vector in fetch_vectors(module, pattern):
         print(f"\n ⏭️Running test case {name} ...")
-
-        settings = setup_setting(db_path + "/" + name + "/", 1, "alice", 0, rpc)
-        db = RockStore(db_path + "/" + name)
-        post_db = RockStore(db_path + "/" + name + "/post")
 
         if name == "00000000.json" or name == "genesis.json":
             print("Skipping genesis...")
@@ -48,9 +40,13 @@ async def test_traces(module, pattern, db_path, rpc):
 
         if len(vector["pre_state"]["keyvals"]) != 0:
             pre_data = {Bytes.from_json(keyval["key"]):Bytes.from_json(keyval["value"]) for keyval in vector["pre_state"]["keyvals"]}
-            state = setup_state(db, pre_data)
+            state = State.from_keyvals(pre_data, jam_node)
         else:
-            state = setup_state(GhostState.genesis(genesis_path=gen_path), db)
+            from jam.state.ghost import GhostState
+            state = GhostState.genesis(genesis_path=gen_path)
+
+        state.store.enable_writes()
+        state.store.enable_cache()
 
         logger.info("Starting transition...")
 
@@ -62,7 +58,7 @@ async def test_traces(module, pattern, db_path, rpc):
         from deepdiff import DeepDiff
 
         post_data = {Bytes.from_json(keyval["key"]): Bytes.from_json(keyval["value"]) for keyval in vector["post_state"]["keyvals"]}
-        post_state = setup_state(post_db, post_data)
+        post_state = State.from_keyvals(post_data, jam_node)
 
         if post_state.pi != state.pi:
             print("MISMATCHED PI")

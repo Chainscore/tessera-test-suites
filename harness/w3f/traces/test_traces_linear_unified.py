@@ -10,10 +10,8 @@ from time import time
 import pytest
 from deepdiff import DeepDiff
 from jam import chain_config
-from jam.settings import setup_setting
 from jam.log_setup import setup_logging
-from jam.state.state import setup_state
-from rockstore import RockStore
+from jam.state.state import State
 from jam.block.block import Block
 from tsrkit_types import Bytes, structure, TypedVector
 
@@ -126,37 +124,30 @@ def get_trace_files(module: str, pattern: str) -> Iterator[Path]:
             yield path
 
 
-def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
+def run_transition_check(case: TraceCase, jam_node, rpc: bool) -> None:
     """
     Executes the validation logic for a single trace case.
     Raises AssertionError if validation fails.
     """
-    # 1. Setup isolated environment
-    # Use explicit timestamp to avoid collision if running fast cycles
-    env_id = f"{int(time() * 1000000)}"
-    work_dir = Path(db_path_base) / env_id
-
-    setup_setting(data_path=str(work_dir / "main"), rpc_flag=rpc)
-
-    db_main = RockStore(str(work_dir / "main"))
-    db_post = RockStore(str(work_dir / "post"))
-
     try:
-        # 2. Setup Pre-State
-        state = setup_state(db_main, case.pre_state)
+        # 1. Setup Pre-State
+        state = State.from_keyvals(case.pre_state, jam_node)
+        state.store.enable_writes()
+        state.store.enable_cache()
 
-        # 3. Apply Transition
-        # Spec logic: verify author index constraint
-        # if case.block.header.author_index < chain_config.num_validators:
-        print("PRE ROOT", state.root.hex())
-        state.transition(case.block, False, True)
-        state.settle(case.block.header.hash())
-        print("POST ROOT", state.root.hex())
+        # CRITICAL: Set jam_node.state so that transition() uses our state via self.load()
+        # transition() calls self.load(self._jam, block.header.parent) which loads from jam.state
+        jam_node.state = state
 
-        # 4. Setup Expected Post-State (for deep comparison)
-        expected_state = setup_state(db_post, case.post_state)
+        # 2. Apply Transition
+        print("Pre root", state.root.hex())
+        state.transition(case.block, True, True)
+        # state.settle(case.block.header.hash())
+        print("State root", state.root.hex())
+        # 3. Setup Expected Post-State (for deep comparison)
+        expected_state = State.from_keyvals(case.post_state, jam_node)
 
-        # 5. Assertions
+        # 4. Assertions
         # Check sub-roots (pi, rho, beta, gamma)
         for attr in ['pi', 'rho', 'beta', 'gamma']:
             actual_val = getattr(state, attr)
@@ -169,10 +160,12 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
                                 significant_digits=0, verbose_level=2, view="tree")
                 print(f"\n⚠️ Mismatched {attr.upper()}:\n{diff}")
 
+        state = State.load(jam_node, case.block.header.hash())
         actual_kv = {k.hex(): v.hex() for k, v in state.store._DB.get_all().items()}
         expect_kv = {k.hex(): v.hex() for k, v in case.post_state.items()}
 
         val_diff = DeepDiff(actual_kv, expect_kv, significant_digits=0, verbose_level=2, view="tree")
+        print("val diff", val_diff)
 
         if val_diff:
             # Print friendly diff for debugging
@@ -190,24 +183,17 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
                 f"Root Mismatch!\nExpected: {case.expected_root}\nActual:   {state.root.hex()}"
             )
 
-    finally:
-        # Cleanup
-        db_main.flush()
-        if work_dir.exists():
-            shutil.rmtree(work_dir)
+    except Exception as e:
+        raise e
 
 
 @pytest.mark.asyncio
-async def test_traces_unified(module, pattern, db_path, rpc):
+async def test_traces_unified(module, pattern, db_path, rpc, jam_node):
     """
     Main test entry point for conformance traces.
     Parses both .bin and .json files dynamically.
     """
     setup_logging(theme="gruvbox", node_name="test")
-
-    db_base = db_path or "data/tmp"
-    if Path(db_base).exists():
-        shutil.rmtree(db_base)
 
     failures = []
     skipped = 0
@@ -232,7 +218,7 @@ async def test_traces_unified(module, pattern, db_path, rpc):
 
         try:
 
-            run_transition_check(case, db_base, rpc)
+            run_transition_check(case, jam_node, rpc)
 
             print("✅ Passed")
             print("\n\n\n\n\n")
