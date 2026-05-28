@@ -6,12 +6,12 @@ from jam.state.state import State
 from jam.state.transitions import Reporting
 from jam.block.block import Block
 from jam.state.utils import construct_state_key
-from jam.models.protocol.crypto import OpaqueHash
+from jam.models.protocol.crypto import BandersnatchPublic, OpaqueHash
 from jam.models.state.alpha import Alpha
 from jam.models.state.beta import Beta
 from jam.models.state.delta import Delta
 from jam.models.state.eta import Eta
-from jam.models.state.gamma import Gamma, GammaP
+from jam.models.state.gamma import Gamma, GammaA, GammaP, GammaS, GammaSFallback, GammaZ
 from jam.models.state.kappa import Kappa
 from jam.models.state.lambda_ import Lambda_
 from jam.models.state.pi import AllCoreStats, AllServiceStats, AllValidatorStats, Pi
@@ -20,6 +20,7 @@ from jam.models.state.sigma import Sigma
 from jam.models.state.rho import Rho
 from jam.models.state.tau import Tau
 from jam.block.extrinsics import GuaranteesExtrinsic
+from jam.utils.constants import EPOCH_LENGTH
 
 
 def _normalize_report_dict(report: dict) -> None:
@@ -106,9 +107,18 @@ def transform_state(vector_state: dict) -> Sigma:
     )
     
     # --- Set Gamma P = Kappa --- #
-    gamma = Gamma.decode(state[construct_state_key(4)])
+    gamma_key = construct_state_key(4)
+    try:
+        gamma = Gamma.decode(state[gamma_key])
+    except (TypeError, ValueError):
+        gamma = Gamma(
+            p=GammaP.from_json(vector_state["curr_validators"]),
+            z=GammaZ(144),
+            s=GammaS(GammaSFallback([BandersnatchPublic(32) for _ in range(EPOCH_LENGTH)])),
+            a=GammaA([]),
+        )
     gamma.p = GammaP.from_json(vector_state["curr_validators"])
-    state[construct_state_key(4)] = gamma.encode()
+    state[gamma_key] = gamma.encode()
     
     return {key.hex(): value.hex() for key, value in state.items()}
 
