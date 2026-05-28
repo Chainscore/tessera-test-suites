@@ -2,12 +2,14 @@
 Dynamically handles both binary (.bin) and JSON (.json) trace files,
 running the appropriate decoding and testing logic based on file type.
 """
+import fnmatch
+import gc
 import json
 import os
 import shutil
 from pathlib import Path
 from typing import Iterator, NamedTuple, Dict, Any, Union
-from time import time
+from time import time, sleep
 import pytest
 from deepdiff import DeepDiff
 from jam import chain_config
@@ -22,8 +24,26 @@ from tsrkit_types import Bytes
 from .trace import Trace
 
 
-TRACE_ROOT = Path(__file__).parents[3] / "ext" / "jam-conformance" / "fuzz-reports" / "0.7.2" / "traces"
+SUPPORTED_TRACE_SUFFIXES = (".bin", ".json")
+SKIP_TRACE_FILES = {"00000000.json", "00000000.bin", "genesis.json", "genesis.bin", "report.json", "report.bin"}
 SHOW_FULL_TRACEBACK = os.environ.get("TRACE_HARNESS_TRACEBACK") == "1"
+
+def _close_store(store: Any) -> None:
+    if store is not None:
+        store.close()
+
+
+def _remove_work_dir(path: Path) -> None:
+    gc.collect()
+    for attempt in range(5):
+        try:
+            shutil.rmtree(path)
+            return
+        except OSError:
+            if attempt == 4:
+                raise
+            gc.collect()
+            sleep(0.1)
 
 
 class TraceCase(NamedTuple):
@@ -52,7 +72,7 @@ def load_trace_case(path: Path) -> TraceCase:
             if json_path.exists():
                 return load_trace_case(json_path)
             raise
-        
+
         return TraceCase(
             id=case_id,
             file_path=path,
@@ -74,12 +94,12 @@ def load_trace_case(path: Path) -> TraceCase:
             id=case_id,
             file_path=path,
             pre_state={
-                Bytes.from_json(kv["key"]): Bytes.from_json(kv["value"]) 
+                Bytes.from_json(kv["key"]): Bytes.from_json(kv["value"])
                 for kv in data["pre_state"]["keyvals"]
             },
             block=Block.from_json(data["block"]),
             post_state={
-                Bytes.from_json(kv["key"]): Bytes.from_json(kv["value"]) 
+                Bytes.from_json(kv["key"]): Bytes.from_json(kv["value"])
                 for kv in data["post_state"]["keyvals"]
             },
             expected_root=data["post_state"]["state_root"].replace("0x", "")
@@ -89,7 +109,7 @@ def load_trace_case(path: Path) -> TraceCase:
         raise ValueError(f"Unsupported file format: {path.suffix}")
 
 
-def get_trace_files(module: str, pattern: str) -> Iterator[Path]:
+def get_trace_files(module: str, pattern: str, trace_root: Path) -> Iterator[Path]:
     """Yields paths to trace files matching the criteria."""
     if not module or not pattern:
         return
@@ -97,24 +117,27 @@ def get_trace_files(module: str, pattern: str) -> Iterator[Path]:
     # Clean input
     mod_filter = module.strip('"\'')
     pat_filter = pattern.strip('"\'')
-    
+    trace_root = trace_root.expanduser()
+
+    if not trace_root.exists():
+        raise FileNotFoundError(f"Trace root does not exist: {trace_root}")
+
     # Define search scope
     if pat_filter == "all":
-        candidates = TRACE_ROOT.rglob("*")
-        # Filter for extensions we support
-        files = (p for p in candidates if p.suffix in ('.bin', '.json'))
+        files = trace_root.rglob("*")
     else:
-        # Search specifically within module dirs
-        # If module is glob-like (e.g. "*"), TRACE_ROOT.glob(mod_filter) works
-        # If module is exact, it works too.
+        # Search module directories, and also support a flat trace-root containing
+        # files like 00036408.bin directly.
         candidates = []
-        for d in TRACE_ROOT.glob(mod_filter):
-            if d.is_dir():
-                candidates.extend(d.glob(pat_filter))
+        for path in trace_root.glob(mod_filter):
+            if path.is_dir():
+                candidates.extend(path.glob(pat_filter))
+            elif fnmatch.fnmatch(path.name, pat_filter):
+                candidates.append(path)
         files = candidates
 
-    for path in files:
-        if path.is_file() and path.suffix in ('.bin', '.json'):
+    for path in sorted(files):
+        if path.is_file() and path.suffix in SUPPORTED_TRACE_SUFFIXES and path.name not in SKIP_TRACE_FILES:
             yield path
 
 
@@ -125,18 +148,23 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
     """
     # 1. Setup isolated environment
     # Use explicit timestamp to avoid collision if running fast cycles
-    env_id = f"{int(time() * 1000000)}" 
+    env_id = f"{int(time() * 1000000)}"
     work_dir = Path(db_path_base) / env_id
-    
-    setup_setting(data_path=str(work_dir / "main"), rpc_flag=rpc)
-    
-    db_main = RockStore(str(work_dir / "main"))
-    db_post = RockStore(str(work_dir / "post"))
+
+    settings = setup_setting(data_path=str(work_dir / "main"), rpc_flag=rpc)
+
+    # db_main = RockStore(str(work_dir / "main"))
+    # db_post = RockStore(str(work_dir / "post"))
+    db_main = None
+    db_post = None
 
     try:
+        db_main = RockStore(str(work_dir / "main"))
+        db_post = RockStore(str(work_dir / "post"))
+
         # 2. Setup Pre-State
         state = setup_state(db_main, case.pre_state)
-        
+
         # 3. Apply Transition
         # Spec logic: verify author index constraint
         # if case.block.header.author_index < chain_config.num_validators:
@@ -147,7 +175,7 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
 
         # 4. Setup Expected Post-State (for deep comparison)
         expected_state = setup_state(db_post, case.post_state)
-        
+
         # 5. Assertions
         # Check sub-roots (pi, rho, beta, gamma)
         for attr in ['pi', 'rho', 'beta', 'gamma']:
@@ -160,7 +188,7 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
                 diff = DeepDiff(actual_val.to_json(), expect_val.to_json(),
                               significant_digits=0, verbose_level=2, view="tree")
                 print(f"\n⚠️ Mismatched {attr.upper()}:\n{diff}")
-        
+
 
 
         actual_kv = {k.hex(): v.hex() for k, v in state.store._DB.get_all().items()}
@@ -186,33 +214,36 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
 
     finally:
         # Cleanup
+        _close_store(db_main)
+        _close_store(db_post)
+        settings.clear()
         # db_main.flush()
         if work_dir.exists():
             shutil.rmtree(work_dir)
 
 
 @pytest.mark.asyncio
-async def test_traces_unified(module, pattern, db_path, rpc):
+async def test_traces_unified(module, pattern, db_path, rpc, trace_root):
     """
     Main test entry point for conformance traces.
     Parses both .bin and .json files dynamically.
     """
     setup_logging(theme="gruvbox", node_name="test")
-    
+
     db_base = db_path or "data/tmp"
     if Path(db_base).exists():
         shutil.rmtree(db_base)
-    
+
     failures = []
     skipped = 0
     passed = 0
-    
+
     # Discovery
-    files = list(get_trace_files(module, pattern))
-    print(f"\n🔍 Found {len(files)} trace files matching pattern '{pattern}' in '{module}'\n")
+    files = list(get_trace_files(module, pattern, trace_root))
+    print(f"\n🔍 Found {len(files)} trace files matching pattern '{pattern}' in '{module}' under {trace_root}\n")
 
     for i, path in enumerate(files):
-        if path.name in ("00000000.json", "genesis.json", "genesis.bin"):
+        if path.name in SKIP_TRACE_FILES:
             skipped += 1
             print(f"⏩ Skipping {path.name}")
             continue
@@ -227,7 +258,7 @@ async def test_traces_unified(module, pattern, db_path, rpc):
         try:
 
             run_transition_check(case, db_base, rpc)
-            
+
             print("✅ Passed")
             print("\n\n\n\n\n")
             passed += 1
@@ -246,7 +277,7 @@ async def test_traces_unified(module, pattern, db_path, rpc):
     print("\n" + "="*50)
     print(f"PASSED: {passed} | FAILED: {len(failures)} | SKIPPED: {skipped}")
     print("="*50)
-    
+
     if failures:
         print("\nFailures:")
         print("")

@@ -192,7 +192,6 @@ def run_transition_check(case: TraceCase, db_path_base: str, rpc: bool) -> None:
 
     finally:
         # Cleanup
-        db_main.flush()
         if work_dir.exists():
             shutil.rmtree(work_dir)
 
